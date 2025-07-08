@@ -3,6 +3,14 @@
 
 using namespace otas_serializer;
 
+struct Leaf {
+    int x;
+    bool operator<(const Leaf &leaf) const {
+        return x > leaf.x;
+    }
+};
+
+
 struct Node {
     int a;
     double b;
@@ -11,10 +19,10 @@ struct Node {
     std::vector<std::vector<float>> e;
     std::string f;
     std::map<int, int> g;
+    std::set<Leaf> h;
 };
-
 int main() {
-    Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}}, "hello world!", {{1, 2}}};
+    Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}}, "hello world!", {{1, 2}}, {{114514}, {1919810}}};
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -33,6 +41,9 @@ int main() {
     std::cout << node1.f << std::endl;
     for (auto &pair : node1.g) {
         std::cout << pair.first << " " << pair.second << std::endl;
+    }
+    for (auto &item : node1.h) {
+        std::cout << item.x << std::endl;
     }
     system("pause");
     return 0;
