@@ -3,6 +3,9 @@
 #include <tuple>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
 
 namespace otas_serializer {
 
@@ -192,6 +195,96 @@ struct deserialize_helper<std::map<T, U>> {
             U se;
             deserialize_helper<U>::deserialize_template(s, se, offset);
             t[fi] = se;
+        }
+        return ;
+    }
+};
+
+
+template <class T, class U>
+struct serialize_helper<std::unordered_map<T, U>> {
+    static auto serialize_template(std::unordered_map<T, U> &t, std::string &s, std::size_t &offset) {
+        std::size_t size = t.size();
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        for (auto &pair : t) {
+            T fi = pair.first;
+            serialize_helper<T>::serialize_template(fi, s, offset);
+            serialize_helper<U>::serialize_template(pair.second, s, offset);
+        }
+        return ;
+    }
+};
+template <class T, class U>
+struct deserialize_helper<std::unordered_map<T, U>> {
+    static auto deserialize_template(std::string &s, std::unordered_map<T, U> &t, std::size_t &offset) {
+        std::size_t size;
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        for (std::size_t index = 0; index < size; index++) {
+            T fi;
+            deserialize_helper<T>::deserialize_template(s, fi, offset);
+            U se;
+            deserialize_helper<U>::deserialize_template(s, se, offset);
+            t[fi] = se;
+        }
+        return ;
+    }
+};
+
+
+template <class T>
+struct serialize_helper<std::set<T>> {
+    static auto serialize_template(std::set<T> &t, std::string &s, std::size_t &offset) {
+        std::size_t size = t.size();
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        for (auto &item : t) {
+            T obj = item;
+            serialize_helper<T>::serialize_template(obj, s, offset);
+        }
+        return ;
+    }
+};
+template <class T>
+struct deserialize_helper<std::set<T>> {
+    static auto deserialize_template(std::string &s, std::set<T> &t, std::size_t &offset) {
+        std::size_t size;
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        for (std::size_t index = 0; index < size; index++) {
+            T item;
+            deserialize_helper<T>::deserialize_template(s, item, offset);
+            t.insert(item);
+        }
+        return ;
+    }
+};
+
+
+template <class T>
+struct serialize_helper<std::unordered_set<T>> {
+    static auto serialize_template(std::unordered_set<T> &t, std::string &s, std::size_t &offset) {
+        std::size_t size = t.size();
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        for (auto &item : t) {
+            T obj = item;
+            serialize_helper<T>::serialize_template(obj, s, offset);
+        }
+        return ;
+    }
+};
+template <class T>
+struct deserialize_helper<std::unordered_set<T>> {
+    static auto deserialize_template(std::string &s, std::unordered_set<T> &t, std::size_t &offset) {
+        std::size_t size;
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        for (std::size_t index = 0; index < size; index++) {
+            T item;
+            deserialize_helper<T>::deserialize_template(s, item, offset);
+            t.insert(item);
         }
         return ;
     }
