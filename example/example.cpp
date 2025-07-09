@@ -46,6 +46,16 @@ int main() {
     for (auto &item : node1.h) {
         std::cout << item.x << std::endl;
     }
+
+    std::array<int, 2> arr{333, 444};
+    std::string s2;
+    serialize(arr, s2);
+    std::array<int, 2> arr2;
+    deserialize(s2, arr2);
+    for (const auto &item : arr2) {
+        std::cout << item << std::endl;
+    }
+
     system("pause");
     return 0;
 }

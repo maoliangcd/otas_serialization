@@ -8,6 +8,7 @@
 #include <list>
 #include <queue>
 #include <deque>
+#include <array>
 
 #include "otas_reflection.h"
 
@@ -190,5 +191,30 @@ GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::set);
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_set);
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::multiset);
 
+
+template <class T, std::size_t N>
+struct serialize_helper<std::array<T, N>> {
+    static auto serialize_template(const std::array<T, N> &t, std::string &s, std::size_t &offset) {
+        std::size_t size = t.size();
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        for (const auto &item : t) {
+            serialize_helper<T>::serialize_template(item, s, offset);
+        }
+        return ;
+    }
+};
+template <class T, std::size_t N>
+struct deserialize_helper<std::array<T, N>> {
+    static auto deserialize_template(const std::string &s, std::array<T, N> &t, std::size_t &offset) {
+        std::size_t size;
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        for (std::size_t index = 0; index < size; index++) {
+            deserialize_helper<T>::deserialize_template(s, t[index], offset);
+        }
+        return ;
+    }
+};
 
 }

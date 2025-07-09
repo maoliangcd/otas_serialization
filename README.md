@@ -2,14 +2,26 @@
 
 A header-only serializer. No need to add anything in your code. 
 
+Support these STL containers:
+- std::string
+- std::vector
+- std::map
+- std::unordered_map
+- std::multimap
+- std::set
+- std::unordered_set
+- std::multiset
+- std::queue
+- std::deque
+- std::list
+- std::array
+
 Q&A:
 1.  Q: Support language?
     A: C++17 and above.
 2.  Q: How does it work?
     A: This project uses static reflection of C++. By using template, it can generete serializer for each struct during compiling. So you no need to add code in your struct.
-3.  Q: Any restriction?
-    A: Just support aggregate struct. Now support all basic type, std::string, std::vector, std::map, will support more in the future.
-4.  Q: How to use?
+3.  Q: How to use?
     A: Here is an example.
 
 An example.
