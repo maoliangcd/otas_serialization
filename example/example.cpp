@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdint>
 #include "../include/otas_serializer.h"
 
 using namespace otas_serializer;
