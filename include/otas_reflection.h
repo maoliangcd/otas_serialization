@@ -54,5 +54,9 @@ GENERATE_TEMPLATE(5, f0, f1, f2, f3, f4);
 GENERATE_TEMPLATE(6, f0, f1, f2, f3, f4, f5);
 GENERATE_TEMPLATE(7, f0, f1, f2, f3, f4, f5, f6);
 GENERATE_TEMPLATE(8, f0, f1, f2, f3, f4, f5, f6, f7);
+GENERATE_TEMPLATE(9, f0, f1, f2, f3, f4, f5, f6, f7, f8);
+GENERATE_TEMPLATE(10, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
+GENERATE_TEMPLATE(11, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10);
+GENERATE_TEMPLATE(12, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11);
 
 }

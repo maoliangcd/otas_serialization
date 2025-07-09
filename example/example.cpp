@@ -22,6 +22,7 @@ struct Node {
     std::map<int, int> g;
     std::set<Leaf> h;
 };
+
 int main() {
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}}, "hello world!", {{1, 2}}, {{114514}, {1919810}}};
     std::string s;
