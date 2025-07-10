@@ -53,6 +53,7 @@ Support these STL containers:
 - `std::list`
 - `std::array`
 - `std::optional`
+- `std::pair`
 - others(TODO...)
 
 ## How does it work?
