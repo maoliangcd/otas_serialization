@@ -168,6 +168,7 @@ struct deserialize_helper<type<T, U>> { \
 GENERATE_TEMPLATE_MAP_TYPE(std::map);
 GENERATE_TEMPLATE_MAP_TYPE(std::unordered_map);
 GENERATE_TEMPLATE_MAP_TYPE(std::multimap);
+GENERATE_TEMPLATE_MAP_TYPE(std::unordered_multimap);
 
 
 #define GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(type) \
@@ -201,7 +202,7 @@ struct deserialize_helper<type<T>> { \
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::set);
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_set);
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::multiset);
-
+GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_multiset);
 
 template <class T, std::size_t N>
 struct serialize_helper<std::array<T, N>> {
