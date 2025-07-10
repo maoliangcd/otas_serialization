@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Generic badge](https://img.shields.io/badge/C++-17-blue.svg)](https://shields.io/)
 
+[中文版](https://github.com/maoliangcd/otas_serialization/blob/main/doc/readme_chinese.md)
 
 A header-only serialization tool. No configuration file, no additional define. 
 
