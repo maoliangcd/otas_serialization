@@ -14,18 +14,6 @@
 #include "otas_reflection.h"
 namespace otas_serializer {
 
-#define serialize(t, s) \
-[](auto &&t, auto &&s) -> auto { \
-    std::size_t offset{}; \
-    serialize_helper<remove_cvref_t<decltype(t)>>::serialize_template(t, s, offset); \
-}(t, s) \
-
-#define deserialize(s, t) \
-[](auto &&s, auto &&t) -> auto {\
-    std::size_t offset{}; \
-    deserialize_helper<remove_cvref_t<decltype(t)>>::deserialize_template(s, t, offset); \
-}(s, t) \
-
 template <class T>
 struct serialize_helper {
     static auto serialize_template(const T &t, std::string &s, std::size_t &offset) {
@@ -256,5 +244,15 @@ struct deserialize_helper<std::pair<T, U>> {
     }
 };
 
+
+auto serialize = [](auto &&t, auto &&s) -> auto {
+    std::size_t offset{};
+    serialize_helper<remove_cvref_t<decltype(t)>>::serialize_template(t, s, offset);
+};
+
+auto deserialize = [](auto &&s, auto &&t) -> auto {
+    std::size_t offset{};
+    deserialize_helper<remove_cvref_t<decltype(t)>>::deserialize_template(s, t, offset);
+};
 
 }

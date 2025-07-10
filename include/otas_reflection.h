@@ -11,11 +11,11 @@ struct any_type {
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
-template <typename T, typename = void, typename ...Args>
+template <class T, class = void, class ...Args>
 struct member_count_struct {
     constexpr static size_t value = sizeof...(Args) - 1;
 };
-template <typename T, typename ...Args>
+template <class T, class ...Args>
 struct member_count_struct<T, std::void_t<decltype(T{{Args{}}...})>, Args...> {
     constexpr static size_t value = member_count_struct<T, void, Args..., any_type>::value;
 };
@@ -64,5 +64,7 @@ GENERATE_TEMPLATE(13, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12);
 GENERATE_TEMPLATE(14, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13);
 GENERATE_TEMPLATE(15, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14);
 GENERATE_TEMPLATE(16, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
+
+#undef GENERATE_TEMPLATE
 
 }

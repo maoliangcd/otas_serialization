@@ -69,5 +69,5 @@ int main() {
 }
 
 /*
-g++ example.cpp -o example.exe -std=c++17
+g++ example.cpp -o example.exe -std=c++20
 */
