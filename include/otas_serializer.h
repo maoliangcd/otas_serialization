@@ -28,11 +28,16 @@ namespace otas_serializer {
 template <class T>
 struct serialize_helper {
     static auto serialize_template(const T &t, std::string &s, std::size_t &offset) {
-        constexpr auto count = get_member_count<T>();
-        auto members = member_tuple_helper<T, count>::tuple_view(t);
-        [&]<std::size_t... index>(std::index_sequence<index...>) {
-            ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), s, offset)), ...);
-        } (std::make_index_sequence<count>{});
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            s.append(reinterpret_cast<char *>(const_cast<T *>(&t)), sizeof(t));
+            offset += sizeof(t);
+        } else {
+            constexpr auto count = get_member_count<T>();
+            auto members = member_tuple_helper<T, count>::tuple_view(t);
+            [&]<std::size_t... index>(std::index_sequence<index...>) {
+                ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), s, offset)), ...);
+            } (std::make_index_sequence<count>{});
+        }
         return ;
     }
 };
@@ -40,44 +45,19 @@ struct serialize_helper {
 template <class T>
 struct deserialize_helper {
     static auto deserialize_template(const std::string &s, T &t, std::size_t &offset) {
-        constexpr auto count = get_member_count<T>();
-        auto members = member_tuple_helper<T, count>::tuple_view(t);
-        [&]<std::size_t... index>(std::index_sequence<index...>) {
-            ((deserialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::deserialize_template(s, std::get<index>(members), offset)), ...);
-        } (std::make_index_sequence<count>{});
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            memcpy(&t, &s[offset], sizeof(t));
+            offset += sizeof(t);
+        } else {
+            constexpr auto count = get_member_count<T>();
+            auto members = member_tuple_helper<T, count>::tuple_view(t);
+            [&]<std::size_t... index>(std::index_sequence<index...>) {
+                ((deserialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::deserialize_template(s, std::get<index>(members), offset)), ...);
+            } (std::make_index_sequence<count>{});
+        }
         return ;
     }
 };
-
-#define GENERATE_TEMPLATE_BASIC_TYPE(type) \
-template<> \
-struct serialize_helper<type> { \
-    static auto serialize_template(const type &t, std::string &s, std::size_t &offset) { \
-        s.append(reinterpret_cast<char *>(const_cast<type *>(&t)), sizeof(t)); \
-        offset += sizeof(t); \
-        return ; \
-    } \
-}; \
-template <> \
-struct deserialize_helper<type> { \
-    static auto deserialize_template(const std::string &s, type &t, std::size_t &offset) { \
-        memcpy(&t, &s[offset], sizeof(t)); \
-        offset += sizeof(type); \
-        return ; \
-    } \
-} \
-
-GENERATE_TEMPLATE_BASIC_TYPE(int);
-GENERATE_TEMPLATE_BASIC_TYPE(unsigned int);
-GENERATE_TEMPLATE_BASIC_TYPE(long);
-GENERATE_TEMPLATE_BASIC_TYPE(unsigned long);
-GENERATE_TEMPLATE_BASIC_TYPE(long long);
-GENERATE_TEMPLATE_BASIC_TYPE(unsigned long long);
-GENERATE_TEMPLATE_BASIC_TYPE(float);
-GENERATE_TEMPLATE_BASIC_TYPE(double);
-GENERATE_TEMPLATE_BASIC_TYPE(char);
-GENERATE_TEMPLATE_BASIC_TYPE(signed char);
-GENERATE_TEMPLATE_BASIC_TYPE(unsigned char);
 
 template <>
 struct serialize_helper<std::string> {

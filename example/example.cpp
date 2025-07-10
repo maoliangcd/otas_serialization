@@ -24,6 +24,7 @@ struct Node {
 };
 
 int main() {
+    static_assert(std::is_trivial_v<float>);
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}}, "hello world!", {{1, 2}}, {{114514}, {1919810}}};
     std::string s;
     std::size_t offset{};
