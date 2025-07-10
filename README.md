@@ -1,6 +1,10 @@
 # otas_serialization
 
-Header-only serializer. No need any additional code. 
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Generic badge](https://img.shields.io/badge/C++-17-blue.svg)](https://shields.io/)
+
+
+A header-only serialization tool. No configuration file, no additional define. 
 
 ## A quick start:
 ```cpp
