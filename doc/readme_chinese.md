@@ -70,7 +70,7 @@ T t3{{},{},{}};
 ```
 在这个例子中，前两个构造会成功，第三个会失败。
 
-但是编译器如何知道构造是否成功？下面需要用到*C++17*引入的`std::void_t<T>`。如果`T`是一个合法的类型，`std::void_t`将返回`void`，否则会触发*SFINAE*机制。再加上*可变参数*和*decltype*，我们就能得到这样一段代码`std::void_t<decltype(T{Args{}...})>`。
+但是编译器如何知道构造是否成功？下面需要用到*C++17*引入的`std::void_t<T>`。如果`T`是一个合法的类型，`std::void_t`将返回`void`，否则会触发*SFINAE*机制。再加上*可变参数*和*decltype*，我们就能得到这样一段代码`std::void_t<decltype(T{{Args{}}...})>`。
 ```cpp
 struct any_type {
     template <typename T>

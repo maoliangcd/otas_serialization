@@ -75,7 +75,7 @@ T t3{{},{},{}};
 ```
 In this example, the first and the second constructor succeed, the third one fails. 
 
-But how does compilier know if constructor succeed? Now we need `std::void_t<T>` since *C++17*. If `T` is a valid type, it returns `void`, or it triggers SFINAE. Combined with *variadic parameters*, *decltype*, we can get code `std::void_t<decltype(T{Args{}...})>`. 
+But how does compilier know if constructor succeed? Now we need `std::void_t<T>` since *C++17*. If `T` is a valid type, it returns `void`, or it triggers SFINAE. Combined with *variadic parameters*, *decltype*, we can get code `std::void_t<decltype(T{{Args{}}...})>`. 
 ```cpp
 struct any_type {
     template <typename T>
