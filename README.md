@@ -59,7 +59,7 @@ Support these STL containers:
 - `others(todo)`
 
 ## How does it work?
-You may know reflection of programming language. Reflection is a technique that enables obtaining struct information during compilation or runtime. Unfortunately, C++ doesn't support dynamic reflection and is weak in static reflection. However, it is already enough to build a non-invasive serializer with C++17.
+You may know reflection of programming language. Reflection is a technique that enables obtaining struct information during compilation or runtime. Unfortunately, C++ doesn't support dynamic reflection and is weak in static reflection(It is said that C++26 will support it completely, but god knows how long). However, it is already enough to build a non-invasive serializer with C++17.
 
 The fisrt question is how to get the number of members in a struct during compilation. Here we use list initialization since *C++11*. We could try to construct a struct with one element, two elements, three elements. If the number of elements is less or equal to the number of struct members, constructor will succeed. Or it will fail. So when it fails, we get the number of struct members. A simple example:
 ```cpp
