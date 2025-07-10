@@ -5,7 +5,7 @@
 namespace otas_serializer {
 
 struct any_type {
-    template <typename T>
+    template <class T>
     operator T();
 };
 template <class T>
@@ -16,7 +16,7 @@ struct member_count_struct {
     constexpr static size_t value = sizeof...(Args) - 1;
 };
 template <typename T, typename ...Args>
-struct member_count_struct<T, std::void_t<decltype(T{Args{}...})>, Args...> {
+struct member_count_struct<T, std::void_t<decltype(T{{Args{}}...})>, Args...> {
     constexpr static size_t value = member_count_struct<T, void, Args..., any_type>::value;
 };
 
@@ -60,5 +60,9 @@ GENERATE_TEMPLATE(9, f0, f1, f2, f3, f4, f5, f6, f7, f8);
 GENERATE_TEMPLATE(10, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
 GENERATE_TEMPLATE(11, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10);
 GENERATE_TEMPLATE(12, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11);
+GENERATE_TEMPLATE(13, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12);
+GENERATE_TEMPLATE(14, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13);
+GENERATE_TEMPLATE(15, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14);
+GENERATE_TEMPLATE(16, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
 
 }

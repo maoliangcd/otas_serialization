@@ -9,6 +9,7 @@
 #include <queue>
 #include <deque>
 #include <array>
+#include <optional>
 
 #include "otas_reflection.h"
 namespace otas_serializer {
@@ -204,6 +205,34 @@ struct deserialize_helper<std::array<T, N>> {
         offset += sizeof(size);
         for (std::size_t index = 0; index < size; index++) {
             deserialize_helper<T>::deserialize_template(s, t[index], offset);
+        }
+        return ;
+    }
+};
+
+
+template <class T>
+struct serialize_helper<std::optional<T>> {
+    static auto serialize_template(const std::optional<T> &t, std::string &s, std::size_t &offset) {
+        bool exist = t.has_value();
+        s.append(reinterpret_cast<char *>(&exist), sizeof(exist));
+        offset += sizeof(exist);
+        if (exist) {
+            serialize_helper<T>::serialize_template(t.value(), s, offset);
+        }
+        return ;
+    }
+};
+template <class T>
+struct deserialize_helper<std::optional<T>> {
+    static auto deserialize_template(const std::string &s, std::optional<T> &t, std::size_t &offset) {
+        bool exist;
+        memcpy(&exist, &s[offset], sizeof(exist));
+        offset += sizeof(exist);
+        if (exist) {
+            T item;
+            deserialize_helper<T>::deserialize_template(s, item, offset);
+            t = item;
         }
         return ;
     }

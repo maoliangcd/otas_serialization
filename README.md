@@ -1,8 +1,8 @@
-# otas_serializer
+# otas_serialization
 
 Header-only serializer. No need any additional code. 
 
-## A short start:
+## A quick start:
 ```cpp
 #include <iostream>
 #include <string>
@@ -38,18 +38,21 @@ Yes! You don't need to add any `define` or configuration file to your code! Just
 - most of STL containers
 
 Support these STL containers:
-- std::string
-- std::vector
-- std::map
-- std::unordered_map
-- std::multimap
-- std::set
-- std::unordered_set
-- std::multiset
-- std::queue
-- std::deque
-- std::list
-- std::array
+- `std::string`
+- `std::vector`
+- `std::map`
+- `std::unordered_map`
+- `std::multimap`
+- `std::unordered_multimap`
+- `std::set`
+- `std::unordered_set`
+- `std::multiset`
+- `std::unordered_multiset`
+- `std::queue`
+- `std::deque`
+- `std::list`
+- `std::array`
+- `std::optional`
 - others(TODO...)
 
 ## How does it work?
@@ -76,7 +79,7 @@ struct member_count_struct {
     constexpr static size_t value = sizeof...(Args) - 1;
 };
 template <typename T, typename ...Args>
-struct member_count_struct<T, std::void_t<decltype(T{Args{}...})>, Args...> {
+struct member_count_struct<T, std::void_t<decltype(T{{Args{}}...})>, Args...> {
     constexpr static size_t value = member_count_struct<T, void, Args..., any_type>::value;
 };
 ```
