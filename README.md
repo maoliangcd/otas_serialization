@@ -35,11 +35,9 @@ int main() {
 Yes! You don't need to add any `define` or configuration file to your code! Just apply `otas_serializer::serialize` and `otas_serializer::deserialize` to your aggregate type.
 
 ## Supported type
-- C++17 or above
-
 - all basic types(int, float, double, char...)
-- aggregate type(no consturctor function, no private members)
-- most of STL containers
+- any aggregate type(no consturctor function, no private members)
+- most of the STL containers
 
 Support these STL containers:
 - `std::string`
@@ -58,19 +56,25 @@ Support these STL containers:
 - `std::array`
 - `std::optional`
 - `std::pair`
-- others(TODO...)
+- `others(todo)`
 
 ## How does it work?
-To build a non-invasive serializer, we need static reflection in C++. The fisrt question is how to get the number of members in a struct during compiling. One possible solution is list initialization in *C++11*. We could try to construct a object with one element, two elements, three elements... Like this:
+You may know reflection of programming language. Reflection is a technique that enables obtaining struct information during compilation or runtime. Unfortunately, C++ doesn't support dynamic reflection and is weak in static reflection. However, it is already enough to build a non-invasive serializer with C++17.
+
+The fisrt question is how to get the number of members in a struct during compilation. Here we use list initialization since *C++11*. We could try to construct a struct with one element, two elements, three elements. If the number of elements is less or equal to the number of struct members, constructor will succeed. Or it will fail. So when it fails, we get the number of struct members. A simple example:
 ```cpp
-T{{}};
-T{{},{}};
-T{{},{},{}};
+class T{
+    int a;
+    int b;
+};
+
+T t1{{}};
+T t2{{},{}};
+T t3{{},{},{}};
 ```
-If the number of elements is less or equal to the number of struct members, constructor will succeed. Or it will fail. So when it fails, we get the number of struct members.
+In this example, the first and the second constructor succeed, the third one fails. 
 
-But how can we calculate it during compiling? Now we need `std::void_t` in *C++17*. It can determine whether the constructor mentioned above is successful. Combined with *template recursion*, *variadic parameters*, *decltype*, *sizeof*, we can get the number of members in a struct.
-
+But how does compilier know if constructor succeed? Now we need `std::void_t<T>` since *C++17*. If `T` is a valid type, it returns `void`, or it triggers SFINAE. Combined with *variadic parameters*, *decltype*, we can get code `std::void_t<decltype(T{Args{}...})>`. 
 ```cpp
 struct any_type {
     template <typename T>
@@ -88,9 +92,8 @@ struct member_count_struct<T, std::void_t<decltype(T{{Args{}}...})>, Args...> {
     constexpr static size_t value = member_count_struct<T, void, Args..., any_type>::value;
 };
 ```
-In this code block, `std::void_t<decltype(T{Args{}...})>` could tell compiler if constructor fucntion succeeds. 
 
-Then we need to get each member from a struct. Here we can use *structure binding* in C++17. Finally we get:
+Finally we need to extract each element from a struct. A useful tool is *structure binding* since C++17. However, it needs some hard code.
 ```cpp
 #define GENERATE_TEMPLATE(n, ...) \
 template <class T> \
@@ -111,14 +114,15 @@ GENERATE_TEMPLATE(3, f0, f1, f2);
 GENERATE_TEMPLATE(4, f0, f1, f2, f3);
 GENERATE_TEMPLATE(5, f0, f1, f2, f3, f4);
 GENERATE_TEMPLATE(6, f0, f1, f2, f3, f4, f5);
+GENERATE_TEMPLATE(7, f0, f1, f2, f3, f4, f5, f6);
+GENERATE_TEMPLATE(8, f0, f1, f2, f3, f4, f5, f6, f7);
 ```
 Well, a little dirty, but useful.
 
 ## Future plans
 - Support more STL containers
-- Support json
+- Support json, xml
 - Increase efficienvy
 
 ## Need help
 - If you know how to increase efficiency of a serializer, please tell me.
-- I'm not a native english speaker, if you find any grammar error in this documnet or just read no smoothly, please point them out.
