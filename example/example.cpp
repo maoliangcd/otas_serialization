@@ -21,11 +21,13 @@ struct Node {
     std::string f;
     std::map<int, int> g;
     std::set<Leaf> h;
+    std::optional<int> i;
 };
 
 int main() {
-    static_assert(std::is_trivial_v<float>);
-    Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}}, "hello world!", {{1, 2}}, {{114514}, {1919810}}};
+    std::cout << get_member_count<Node>() << std::endl;
+    Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}},
+        "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}};
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -57,7 +59,9 @@ int main() {
     for (const auto &item : arr2) {
         std::cout << item << std::endl;
     }
-
+    if (node1.i) {
+        std::cout << node1.i.value() << std::endl;
+    }
     system("pause");
     return 0;
 }
