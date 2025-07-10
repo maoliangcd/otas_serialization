@@ -22,12 +22,13 @@ struct Node {
     std::map<int, int> g;
     std::set<Leaf> h;
     std::optional<int> i;
+    std::pair<double, double> j;
 };
 
 int main() {
     std::cout << get_member_count<Node>() << std::endl;
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}},
-        "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}};
+        "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}, {1.1, 2.2}};
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -62,6 +63,7 @@ int main() {
     if (node1.i) {
         std::cout << node1.i.value() << std::endl;
     }
+    std::cout << node1.j.first << " " << node1.j.second << std::endl;
     system("pause");
     return 0;
 }

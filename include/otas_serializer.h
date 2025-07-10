@@ -238,4 +238,23 @@ struct deserialize_helper<std::optional<T>> {
     }
 };
 
+
+template <class T, class U>
+struct serialize_helper<std::pair<T, U>> {
+    static auto serialize_template(const std::pair<T, U> &t, std::string &s, std::size_t &offset) {
+        serialize_helper<T>::serialize_template(t.first, s, offset);
+        serialize_helper<U>::serialize_template(t.second, s, offset);
+        return ;
+    }
+};
+template <class T, class U>
+struct deserialize_helper<std::pair<T, U>> {
+    static auto deserialize_template(const std::string &s, std::pair<T, U> &t, std::size_t &offset) {
+        deserialize_helper<T>::deserialize_template(s, t.first, offset);
+        deserialize_helper<T>::deserialize_template(s, t.second, offset);
+        return ;
+    }
+};
+
+
 }
