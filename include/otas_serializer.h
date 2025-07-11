@@ -255,4 +255,8 @@ auto deserialize = [](auto &&s, auto &&t) -> auto {
     deserialize_helper<remove_cvref_t<decltype(t)>>::deserialize_template(s, t, offset);
 };
 
+#undef GENERATE_TEMPLATE_ITERATOR_TYPE
+#undef GENERATE_TEMPLATE_MAP_TYPE
+#undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
+#undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 }

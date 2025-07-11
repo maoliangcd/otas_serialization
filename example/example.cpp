@@ -26,6 +26,12 @@ struct Node {
 };
 
 int main() {
+
+    auto names = get_member_names<Node>();
+    for (auto &name : names) {
+        std::cout << name << std::endl;
+    }
+
     std::cout << get_member_count<Node>() << std::endl;
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}},
         "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}, {1.1, 2.2}};
