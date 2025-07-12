@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdint>
+#include <locale>
 #include "../include/otas_serializer.h"
 
 using namespace otas_serializer;
@@ -26,6 +27,7 @@ struct Node {
     std::forward_list<char> l;
     std::tuple<std::string, int> m;
     std::variant<int, char> n;
+    std::wstring o;
 };
 
 int main() {
@@ -38,6 +40,7 @@ int main() {
     std::get<0>(node0.m) = "noname";
     std::get<1>(node0.m) = -1;
     node0.n = 'y';
+    node0.o = L"yesname";
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -79,6 +82,7 @@ int main() {
     }
     std::cout << std::get<0>(node1.m) << " " << std::get<1>(node1.m) << std::endl;
     std::cout << std::get<char>(node1.n) << std::endl;
+    std::wcout << node0.o << std::endl;
     system("pause");
     return 0;
 }
