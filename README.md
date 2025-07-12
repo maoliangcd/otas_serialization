@@ -60,6 +60,7 @@ Support these STL containers:
 - `std::unique_ptr`
 - `std::forward_list`
 - `std::tuple`
+- `std::variant`
 - `others(todo)`
 
 ## How does it work?
