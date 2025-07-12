@@ -54,6 +54,7 @@ int main() {
 - `std::unique_ptr`
 - `std::forward_list`
 - `std::tuple`
+- `std::variant`
 - `others(todo)`
 
 ## 原理

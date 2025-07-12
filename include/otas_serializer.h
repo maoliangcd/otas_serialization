@@ -12,6 +12,7 @@
 #include <optional>
 #include <memory>
 #include <forward_list>
+#include <variant>
 
 #include "otas_reflection.h"
 namespace otas_serializer {
@@ -323,7 +324,77 @@ struct deserialize_helper<std::tuple<Args...>> {
     }
 };
 
+template <class T, std::size_t index>
+struct switch_variant_type_helper {
+    inline constexpr static void run(T &t) {
+        if constexpr (index < std::variant_size_v<T>) {
+            t = T{std::in_place_index_t<index>{}};
+        }
+        return ;
+    }
+};
 
+#define GENERATE_VARIANT_CONSTRUCT_HELPER(index) \
+case (index): \
+if constexpr (index < std::variant_size_v<T>) { \
+    return switch_variant_type_helper<T, index>::run(t); \
+} else { \
+    break; \
+}
+
+template <class T>
+inline constexpr auto switch_variant_type(T &t, std::size_t index) {
+    switch (index) {
+        GENERATE_VARIANT_CONSTRUCT_HELPER(0);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(1);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(2);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(3);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(4);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(5);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(6);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(7);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(8);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(9);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(10);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(11);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(12);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(13);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(14);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(15);
+        default:
+            break;
+    }
+    return ;
+}
+
+#undef GENERATE_VARIANT_CONSTRUCT_HELPER
+
+template <class ...Args>
+struct serialize_helper<std::variant<Args...>> {
+    static auto serialize_template(const std::variant<Args...> &t, std::string &s, std::size_t &offset) {
+        std::size_t index = t.index();
+        std::cout << index << std::endl;
+        s.append(reinterpret_cast<char *>(&index), sizeof(index));
+        offset += sizeof(index);
+        std::visit([&](const auto &value) {
+            serialize_helper<remove_cvref_t<decltype(value)>>::serialize_template(value, s, offset);
+        }, t);
+        return ;
+    }
+};
+template <class ...Args>
+struct deserialize_helper<std::variant<Args...>> {
+    static auto deserialize_template(const std::string &s, std::variant<Args...> &t, std::size_t &offset) {
+        std::size_t index;
+        memcpy(&index, &s[offset], sizeof(index));
+        offset += sizeof(index);
+        switch_variant_type<std::variant<Args...>>(t, index);
+        std::visit([&](auto &value) {
+            deserialize_helper<remove_cvref_t<decltype(value)>>::deserialize_template(s, value, offset);
+        }, t);
+        return ;
+    }
+};
 
 auto serialize = [](auto &&t, auto &&s) -> auto {
     std::size_t offset{};
@@ -340,3 +411,6 @@ auto deserialize = [](auto &&s, auto &&t) -> auto {
 #undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
 #undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 }
+
+
+// todo: std::in_place_t
