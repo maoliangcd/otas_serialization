@@ -24,6 +24,7 @@ struct Node {
     std::pair<double, double> j;
     std::unique_ptr<int> k;
     std::forward_list<char> l;
+    std::tuple<std::string, int> m;
 };
 
 int main() {
@@ -33,6 +34,8 @@ int main() {
     auto ptr = new int;
     *ptr = 2025;
     node0.k.reset(ptr);
+    std::get<0>(node0.m) = "noname";
+    std::get<1>(node0.m) = -1;
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -72,6 +75,7 @@ int main() {
     for (const auto &item : node1.l) {
         std::cout << item << std::endl;
     }
+    std::cout << std::get<0>(node1.m) << " " << std::get<1>(node1.m) << std::endl;
     system("pause");
     return 0;
 }
