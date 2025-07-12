@@ -11,7 +11,6 @@ struct Leaf {
     }
 };
 
-
 struct Node {
     int a;
     double b;
@@ -23,18 +22,16 @@ struct Node {
     std::set<Leaf> h;
     std::optional<int> i;
     std::pair<double, double> j;
+    std::unique_ptr<int> k;
 };
 
 int main() {
-
-    auto names = get_member_names<Node>();
-    for (auto &name : names) {
-        std::cout << name << std::endl;
-    }
-
     std::cout << get_member_count<Node>() << std::endl;
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}},
         "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}, {1.1, 2.2}};
+    auto ptr = new int;
+    *ptr = 2025;
+    node0.k.reset(ptr);
     std::string s;
     std::size_t offset{};
     serialize(node0, s);
@@ -70,10 +67,11 @@ int main() {
         std::cout << node1.i.value() << std::endl;
     }
     std::cout << node1.j.first << " " << node1.j.second << std::endl;
+    std::cout << *(node1.k) << std::endl;
     system("pause");
     return 0;
 }
 
 /*
-g++ example.cpp -o example.exe -std=c++20
+g++ example.cpp -o example.exe -std=c++17
 */

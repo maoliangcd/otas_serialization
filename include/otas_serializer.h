@@ -10,6 +10,7 @@
 #include <deque>
 #include <array>
 #include <optional>
+#include <memory>
 
 #include "otas_reflection.h"
 namespace otas_serializer {
@@ -244,6 +245,32 @@ struct deserialize_helper<std::pair<T, U>> {
     }
 };
 
+template <class T> \
+struct serialize_helper<std::unique_ptr<T>> { \
+    static auto serialize_template(const std::unique_ptr<T> &t, std::string &s, std::size_t &offset) { \
+        bool exist = t.get(); \
+        s.append(reinterpret_cast<char *>(&exist), sizeof(exist)); \
+        offset += sizeof(exist); \
+        if (exist) { \
+            serialize_helper<T>::serialize_template(*t, s, offset); \
+        } \
+        return ; \
+    } \
+}; \
+template <class T>
+struct deserialize_helper<std::unique_ptr<T>> {
+    static auto deserialize_template(const std::string &s, std::unique_ptr<T> &t, std::size_t &offset) {
+        bool exist;
+        memcpy(&exist, &s[offset], sizeof(exist));
+        offset += sizeof(exist); \
+        if (exist) {
+            T* ptr = new T{};
+            deserialize_helper<T>::deserialize_template(s, *ptr, offset);
+            t.reset(ptr);
+        }
+        return ;
+    }
+};
 
 auto serialize = [](auto &&t, auto &&s) -> auto {
     std::size_t offset{};

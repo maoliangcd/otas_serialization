@@ -53,33 +53,6 @@ struct member_tuple_helper<T, n> { \
     } \
 } \
 
-template <auto T>
-inline constexpr auto print_member_name() {
-    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
-    constexpr auto l = function_name.rfind("::");
-    constexpr auto r = function_name.rfind(")]");
-    constexpr std::string_view member_name = function_name.substr(l + 2, r - l - 2);
-    return member_name;
-}
-
-template <class T>
-struct member_name_struct {
-    inline constexpr static auto get_member_names() {
-        constexpr auto count = get_member_count<T>();
-        constexpr auto members = member_tuple_helper<T, count>::tuple_view_static();
-        std::array<std::string_view, count> arr;
-        [&]<std::size_t... index>(std::index_sequence<index...>) {
-            ((arr[index] = print_member_name<&std::get<index>(members)>()), ...);
-        } (std::make_index_sequence<count>{});
-        return arr;
-    }
-};
-
-template <class T>
-inline constexpr auto get_member_names() {
-    return member_name_struct<remove_cvref_t<T>>::get_member_names();
-}
-
 GENERATE_TEMPLATE(1, f0);
 GENERATE_TEMPLATE(2, f0, f1);
 GENERATE_TEMPLATE(3, f0, f1, f2);
