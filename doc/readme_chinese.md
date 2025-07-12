@@ -51,6 +51,8 @@ int main() {
 - `std::array`
 - `std::optional`
 - `std::pair`
+- `std::unique_ptr`
+- `std::forward_list`
 - `others(todo)`
 
 ## 原理

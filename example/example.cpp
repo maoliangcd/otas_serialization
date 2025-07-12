@@ -23,12 +23,13 @@ struct Node {
     std::optional<int> i;
     std::pair<double, double> j;
     std::unique_ptr<int> k;
+    std::forward_list<char> l;
 };
 
 int main() {
     std::cout << get_member_count<Node>() << std::endl;
     Node node0{1, 2.0, '3', {1, 2}, {{0.1, 0.2}, {0.3, 0.4, 0.5}},
-        "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}, {1.1, 2.2}};
+        "hello world!", {{1, 2}}, {{114514}, {1919810}}, {998244353}, {1.1, 2.2},{},{'a', 'b'}};
     auto ptr = new int;
     *ptr = 2025;
     node0.k.reset(ptr);
@@ -68,6 +69,9 @@ int main() {
     }
     std::cout << node1.j.first << " " << node1.j.second << std::endl;
     std::cout << *(node1.k) << std::endl;
+    for (const auto &item : node1.l) {
+        std::cout << item << std::endl;
+    }
     system("pause");
     return 0;
 }

@@ -6,7 +6,7 @@ namespace otas_serializer {
 
 struct any_type {
     template <class T>
-    operator T();
+    operator T() const;
 };
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
@@ -44,11 +44,6 @@ struct member_tuple_helper<T, n> { \
     } \
     inline constexpr static auto tuple_view(const T &t) { \
         auto &&[__VA_ARGS__] = t; \
-        return std::tie(__VA_ARGS__); \
-    } \
-    inline static T obj{}; \
-    inline constexpr static auto tuple_view_static() { \
-        auto &&[__VA_ARGS__] = obj; \
         return std::tie(__VA_ARGS__); \
     } \
 } \

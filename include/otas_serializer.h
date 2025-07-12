@@ -11,6 +11,7 @@
 #include <array>
 #include <optional>
 #include <memory>
+#include <forward_list>
 
 #include "otas_reflection.h"
 namespace otas_serializer {
@@ -267,6 +268,37 @@ struct deserialize_helper<std::unique_ptr<T>> {
             T* ptr = new T{};
             deserialize_helper<T>::deserialize_template(s, *ptr, offset);
             t.reset(ptr);
+        }
+        return ;
+    }
+};
+
+template <class T>
+struct serialize_helper<std::forward_list<T>> {
+    static auto serialize_template(const std::forward_list<T> &t, std::string &s, std::size_t &offset) {
+        std::size_t size{};
+        auto offset_back = offset;
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        for (const auto &item : t) {
+            size++;
+            serialize_helper<T>::serialize_template(item, s, offset);
+        }
+        memcpy(&s[offset_back], &size, sizeof(size));
+        return ;
+    }
+};
+template <class T>
+struct deserialize_helper<std::forward_list<T>> {
+    static auto deserialize_template(const std::string &s, std::forward_list<T> &t, std::size_t &offset) {
+        std::size_t size{};
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        for (std::size_t index = 0; index < size; index++) {
+            t.push_front(T{});
+        }
+        for (auto &item : t) {
+            deserialize_helper<T>::deserialize_template(s, item, offset);
         }
         return ;
     }

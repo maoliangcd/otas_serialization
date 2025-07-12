@@ -57,6 +57,8 @@ Support these STL containers:
 - `std::array`
 - `std::optional`
 - `std::pair`
+- `std::unique_ptr`
+- `std::forward_list`
 - `others(todo)`
 
 ## How does it work?
