@@ -130,7 +130,7 @@ struct deserialize_helper<type<T, U>> { \
             deserialize_helper<T>::deserialize_template(s, fi, offset); \
             U se; \
             deserialize_helper<U>::deserialize_template(s, se, offset); \
-            t[fi] = se; \
+            t.emplace(fi, se); \
         } \
         return ;\
     } \
@@ -164,7 +164,7 @@ struct deserialize_helper<type<T>> { \
         for (std::size_t index = 0; index < size; index++) { \
             T item; \
             deserialize_helper<T>::deserialize_template(s, item, offset); \
-            t.insert(item); \
+            t.emplace(item); \
         } \
         return ; \
     } \
@@ -220,9 +220,8 @@ struct deserialize_helper<std::optional<T>> {
         memcpy(&exist, &s[offset], sizeof(exist));
         offset += sizeof(exist);
         if (exist) {
-            T item;
-            deserialize_helper<T>::deserialize_template(s, item, offset);
-            t = item;
+            t = T{};
+            deserialize_helper<T>::deserialize_template(s, t.value(), offset);
         }
         return ;
     }
