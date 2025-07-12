@@ -37,6 +37,7 @@ int main() {
 支持以下STL容器：
 - `std::string`
 - `std::vector`
+- `std::wstring`
 - `std::map`
 - `std::unordered_map`
 - `std::multimap`

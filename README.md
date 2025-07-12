@@ -42,6 +42,7 @@ Yes! You don't need to add any `define` or configuration file to your code! Just
 
 Support these STL containers:
 - `std::string`
+- `std::wstring`
 - `std::vector`
 - `std::map`
 - `std::unordered_map`

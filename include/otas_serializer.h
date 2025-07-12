@@ -74,6 +74,31 @@ struct deserialize_helper<std::string> {
     }
 };
 
+
+template <>
+struct serialize_helper<std::wstring> {
+    static auto serialize_template(const std::wstring &t, std::string &s, std::size_t &offset) {
+        std::size_t size = t.length() * sizeof(wchar_t);
+        s.append(reinterpret_cast<char *>(&size), sizeof(size));
+        offset += sizeof(size);
+        s.append(reinterpret_cast<char *>(const_cast<wchar_t *>(t.c_str())), size);
+        offset += size;
+        return ;
+    }
+};
+template <>
+struct deserialize_helper<std::wstring> {
+    static auto deserialize_template(const std::string &s, std::wstring &t, std::size_t &offset) {
+        std::size_t size;
+        memcpy(&size, &s[offset], sizeof(size));
+        offset += sizeof(size);
+        t = std::wstring(reinterpret_cast<wchar_t *>(const_cast<char *>(&s[offset])), size / sizeof(wchar_t));
+        offset += size;
+        return ;
+    }
+};
+
+
 #define GENERATE_TEMPLATE_ITERATOR_TYPE(type) \
 template <class T> \
 struct serialize_helper<type<T>> { \
