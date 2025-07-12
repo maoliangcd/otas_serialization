@@ -59,6 +59,7 @@ Support these STL containers:
 - `std::pair`
 - `std::unique_ptr`
 - `std::forward_list`
+- `std::tuple`
 - `others(todo)`
 
 ## How does it work?

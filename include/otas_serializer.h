@@ -303,6 +303,28 @@ struct deserialize_helper<std::forward_list<T>> {
     }
 };
 
+
+template <class ...Args>
+struct serialize_helper<std::tuple<Args...>> {
+    static auto serialize_template(const std::tuple<Args...> &t, std::string &s, std::size_t &offset) {
+        [&]<std::size_t... index>(std::index_sequence<index...>) {
+            ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, std::tuple<Args...>>>>::serialize_template(std::get<index>(t), s, offset)), ...);
+        } (std::make_index_sequence<sizeof...(Args)>{});
+        return ;
+    }
+};
+template <class ...Args>
+struct deserialize_helper<std::tuple<Args...>> {
+    static auto deserialize_template(const std::string &s, std::tuple<Args...> &t, std::size_t &offset) {
+        [&]<std::size_t... index>(std::index_sequence<index...>) {
+            ((deserialize_helper<remove_cvref_t<std::tuple_element_t<index, std::tuple<Args...>>>>::deserialize_template(s, std::get<index>(t), offset)), ...);
+        } (std::make_index_sequence<sizeof...(Args)>{});
+        return ;
+    }
+};
+
+
+
 auto serialize = [](auto &&t, auto &&s) -> auto {
     std::size_t offset{};
     serialize_helper<remove_cvref_t<decltype(t)>>::serialize_template(t, s, offset);

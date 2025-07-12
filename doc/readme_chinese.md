@@ -53,6 +53,7 @@ int main() {
 - `std::pair`
 - `std::unique_ptr`
 - `std::forward_list`
+- `std::tuple`
 - `others(todo)`
 
 ## 原理
