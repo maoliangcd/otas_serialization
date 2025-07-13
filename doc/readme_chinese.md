@@ -94,21 +94,57 @@ void print_args(T &t, Args &...args) {
 ```
 在这个例子中，`print_args`会打印所有传入的参数。
 
-#### 3.2 SFINAE
-SFINAE，全称*替换失败而非错误(substitution failure is not an error)*。在编译期模板展开错误时，不会报错，而是把发生错误的模板给丢弃。对开发者来说，就是你只管写，剩下的交给编译器，不成功也不会导致编译失败。C++17引入`std::void_t`增强这一机制。
+#### 3.2 模板特化
+在实现一个模板方法或模板类后，某些类可能需要一些特殊的实现，此时就可以使用模板特化。特化可分为全特化和偏特化。全特化就是针对某种类提供了特殊的实现。
+```cpp
+template <class T>
+T add(T &a, T &b) {
+    return a + b;
+}
+template <>
+auto add<int>(int &a, int &b) {
+    return a + b;
+}
+```
+
+但有时，我们希望针对指针`T *`或容器`std::vector<T>`的模板提供特殊实现。这里只对参数进行了部分限制，并没有指定具体的类型，因此被称为偏特化。偏特化进一步限制模板参数，只有类模板支持偏特化，函数模板不支持偏特化，因为函数可以进行重载，也能达到同样的效果。
+
+```cpp
+template <class T>
+struct print_helper {
+    static void print(T &t) {
+        std::cout << t << std::endl;
+    }
+}
+
+template <class T>
+struct print_helper<std::vector<T>> {
+    static void print(std::vector<T> &t) {
+        for (auto &item : t) {
+            std::cout << t << std::endl;
+        }
+    }
+}
+```
+模板匹配的优先级为 全特化 > 偏特化 > 未特化
+
+#### 3.3 SFINAE
+SFINAE，全称*替换失败而非错误(substitution failure is not an error)*。在编译期模板展开错误时，不会报错，而是把发生错误的模板给丢弃。对开发者来说，就是你只管写，剩下的交给编译器，不成功也不会导致编译失败。C++17引入`std::void_t<T>`增强这一机制。如果T是一个合法类型表达式，会返回`void`，否则就会丢弃掉这个模板。
 
 ```cpp
 template <class T, class = void>
-struct node {
-    
-};
-```
+struct has_member_name : std::false_type{};
 
-### 3.获取结构体成员数量
-首先要解决的是如何在编译时获得一个结构体的成员数量。此时可以使用*C++11*引入的初始化列表。尝试用一个变量，两个变量，三个变量···来构造一个结构体。如果变量的数量小于等于结构体成员数量，构造函数就会成功，否则就会失败。这里有一个简单的例子：
+template <class T>
+struct has_member_name<T, std::void_t<class T::name>> : std::true_type{};
+```
+在这个例子中，如果`T`类型存在`name`成员，`std::void_t`推导成功，`has_member_name<T>`会匹配到下面的偏特化版本，继承`std::true_type`。否则触发SFINAE，匹配到上面的未特化版本，继承`std::false_type`。
+
+### 4.获取结构体成员数量
+前置芝士讲解完毕，下面看第一个问题，如何在编译时获得一个结构体的成员数量。*C++11*引入初始化列表。尝试用一个变量，两个变量，三个变量···来构造一个结构体。如果变量的数量小于等于结构体成员数量，构造函数就会成功，否则就会失败。这里有一个简单的例子：
 
 ```cpp
-class T{
+class T {
     int a;
     int b;
 };
