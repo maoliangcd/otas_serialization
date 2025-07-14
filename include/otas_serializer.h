@@ -15,6 +15,7 @@
 #include <memory>
 #include <forward_list>
 #include <variant>
+#include <string>
 
 #include "otas_reflection.h"
 namespace otas_serializer {
@@ -400,7 +401,6 @@ template <class ...Args>
 struct serialize_helper<std::variant<Args...>> {
     static auto serialize_template(const std::variant<Args...> &t, std::string &s, std::size_t &offset) {
         unsigned int index = t.index();
-        std::cout << index << std::endl;
         s.append(reinterpret_cast<char *>(&index), sizeof(index));
         offset += sizeof(index);
         std::visit([&](const auto &value) {
