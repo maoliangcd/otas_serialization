@@ -3,11 +3,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Generic badge](https://img.shields.io/badge/C++-17-blue.svg)](https://shields.io/)
 
+[设计文档](https://github.com/maoliangcd/otas_serialization/blob/main/doc/design.md)
+
 [English readme](https://github.com/maoliangcd/otas_serialization/blob/main/doc/readme_english.md)
 
 这是一个只包含头文件的序列化库。不需要额外的配置文件和宏定义。
 
 ## 快速开始:
+### 1.示例
 ```cpp
 #include <iostream>
 #include <string>
@@ -32,7 +35,14 @@ int main() {
     return 0;
 }
 ```
-没错，你不需要添加任何`define`，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
+没错，你不需要添加任何宏定义，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
+
+### 2.部署
+将`include`目录下的内容复制到你的项目
+
+### 3.测试
+运行`benchmark`下的`.bat`或`.sh`脚本
+
 
 ## 支持的类型
 - 基本类型(int, float, double, char...)

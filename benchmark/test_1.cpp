@@ -14,7 +14,7 @@ struct Node {
     char g;
 };
 
-int main() {
+void TEST_CASE1() {
     Node node1{-1, 2, -3, 4, 5.5, 6.6, '7'};
     std::string s;
     otas_serializer::serialize(node1, s);
@@ -27,6 +27,10 @@ int main() {
     assert(node1.e == node2.e);
     assert(node1.f == node2.f);
     assert(node1.g == node2.g);
+}
+
+int main() {
+    TEST_CASE1();
     std::cout << "test_1 passed" << std::endl;
     return 0;
 }
