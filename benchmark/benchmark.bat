@@ -4,6 +4,6 @@ set std=17
 cmake -S . -B %build_dir% -G "MinGW Makefiles"
 cmake --build %build_dir%
 
-for %%G in (build\benchmark\*.exe) do (
+for %%G in (build\*.exe) do (
     "%%G"
 )
