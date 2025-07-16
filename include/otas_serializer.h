@@ -21,38 +21,24 @@
 #include "otas_reflection.h"
 namespace otas_serializer {
 
-template <class T>
-struct serialize_size_helper {
-    static auto serialize_template(const T &t, std::size_t &offset) {
-        if constexpr (std::is_trivially_copyable_v<T>) {
-            offset += sizeof(t);
-        } else {
-            constexpr auto count = get_member_count<T>();
-            auto members = member_tuple_helper<T, count>::tuple_view(t);
-            [&]<std::size_t... index>(std::index_sequence<index...>) {
-                ((serialize_size_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), offset)), ...);
-            } (std::make_index_sequence<count>{});
-        }
-        return ;
-    }
-};
-template <class T>
+template <class T, bool copy>
 struct serialize_helper {
     static auto serialize_template(const T &t, std::string &s, std::size_t &offset) {
         if constexpr (std::is_trivially_copyable_v<T>) {
-            memcpy(&s[offset], &t, sizeof(t));
+            if constexpr (copy) {
+                memcpy(&s[offset], &t, sizeof(t));
+            }
             offset += sizeof(t);
         } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
             [&]<std::size_t... index>(std::index_sequence<index...>) {
-                ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), s, offset)), ...);
+                ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>, copy>::serialize_template(std::get<index>(members), s, offset)), ...);
             } (std::make_index_sequence<count>{});
         }
         return ;
     }
 };
-
 template <class T>
 struct deserialize_helper {
     static auto deserialize_template(const std::string &s, T &t, std::size_t &offset) {
@@ -71,21 +57,17 @@ struct deserialize_helper {
 };
 
 
-template <>
-struct serialize_size_helper<std::string> {
-    static auto serialize_template(const std::string &t, std::size_t &offset) {
-        unsigned int size = t.length();
-        offset += sizeof(size) + size;
-        return ;
-    }
-};
-template <>
-struct serialize_helper<std::string> {
+template <bool copy>
+struct serialize_helper<std::string, copy> {
     static auto serialize_template(const std::string &t, std::string &s, std::size_t &offset) {
         unsigned int size = t.length();
-        memcpy(&s[offset], &size, sizeof(size));
+        if constexpr (copy) {
+            memcpy(&s[offset], &size, sizeof(size));
+        }
         offset += sizeof(size);
-        memcpy(&s[offset], &t, sizeof(t));
+        if constexpr (copy) {
+            memcpy(&s[offset], &t, sizeof(t));
+        }
         offset += size;
         return ;
     }
@@ -103,21 +85,17 @@ struct deserialize_helper<std::string> {
 };
 
 
-template <>
-struct serialize_size_helper<std::wstring> {
-    static auto serialize_template(const std::wstring &t, std::size_t &offset) {
-        unsigned int size = t.length() * sizeof(wchar_t);
-        offset += sizeof(size) + size;
-        return ;
-    }
-};
-template <>
-struct serialize_helper<std::wstring> {
+template <bool copy>
+struct serialize_helper<std::wstring, copy> {
     static auto serialize_template(const std::wstring &t, std::string &s, std::size_t &offset) {
         unsigned int size = t.length() * sizeof(wchar_t);
-        memcpy(&s[offset], &size, sizeof(size));
+        if constexpr (copy) {
+            memcpy(&s[offset], &size, sizeof(size));
+        }
         offset += sizeof(size);
-        memcpy(&s[offset], t.c_str(), size);
+        if constexpr (copy) {
+            memcpy(&s[offset], t.c_str(), size);
+        }
         offset += size;
         return ;
     }
@@ -136,25 +114,16 @@ struct deserialize_helper<std::wstring> {
 
 
 #define GENERATE_TEMPLATE_ITERATOR_TYPE(type) \
-template <class T> \
-struct serialize_size_helper<type<T>> { \
-    static auto serialize_template(const type<T> &t, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        offset += sizeof(size); \
-        for (const auto &item : t) { \
-            serialize_size_helper<T>::serialize_template(item, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T> \
-struct serialize_helper<type<T>> { \
+template <class T, bool copy> \
+struct serialize_helper<type<T>, copy> { \
     static auto serialize_template(const type<T> &t, std::string &s, std::size_t &offset) { \
         unsigned int size = t.size(); \
-        memcpy(&s[offset], &size, sizeof(size)); \
+        if constexpr (copy) { \
+            memcpy(&s[offset], &size, sizeof(size)); \
+        } \
         offset += sizeof(size); \
         for (const auto &item : t) { \
-            serialize_helper<T>::serialize_template(item, s, offset); \
+            serialize_helper<T, copy>::serialize_template(item, s, offset); \
         } \
         return ; \
     } \
@@ -179,27 +148,17 @@ GENERATE_TEMPLATE_ITERATOR_TYPE(std::deque);
 
 
 #define GENERATE_TEMPLATE_MAP_TYPE(type) \
-template <class T, class U> \
-struct serialize_size_helper<type<T, U>> { \
-    static auto serialize_template(const type<T, U> &t, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        offset += sizeof(size); \
-        for (const auto &pair : t) { \
-            serialize_size_helper<T>::serialize_template(pair.first, offset); \
-            serialize_size_helper<U>::serialize_template(pair.second, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T, class U> \
-struct serialize_helper<type<T, U>> { \
+template <class T, class U, bool copy> \
+struct serialize_helper<type<T, U>, copy> { \
     static auto serialize_template(const type<T, U> &t, std::string &s, std::size_t &offset) { \
         unsigned int size = t.size(); \
-        memcpy(&s[offset], &size, sizeof(size)); \
+        if constexpr (copy) { \
+            memcpy(&s[offset], &size, sizeof(size)); \
+        } \
         offset += sizeof(size); \
         for (const auto &pair : t) { \
-            serialize_helper<T>::serialize_template(pair.first, s, offset); \
-            serialize_helper<U>::serialize_template(pair.second, s, offset); \
+            serialize_helper<T, copy>::serialize_template(pair.first, s, offset); \
+            serialize_helper<U, copy>::serialize_template(pair.second, s, offset); \
         } \
         return ; \
     } \
@@ -228,25 +187,16 @@ GENERATE_TEMPLATE_MAP_TYPE(std::unordered_multimap);
 
 
 #define GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(type) \
-template <class T> \
-struct serialize_size_helper<type<T>> { \
-    static auto serialize_template(const type<T> &t, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        offset += sizeof(size); \
-        for (const auto &item : t) { \
-            serialize_size_helper<T>::serialize_template(item, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T> \
-struct serialize_helper<type<T>> { \
+template <class T, bool copy> \
+struct serialize_helper<type<T>, copy> { \
     static auto serialize_template(const type<T> &t, std::string &s, std::size_t &offset) { \
         unsigned int size = t.size(); \
-        memcpy(&s[offset], &size, sizeof(size)); \
+        if constexpr (copy) { \
+            memcpy(&s[offset], &size, sizeof(size)); \
+        } \
         offset += sizeof(size); \
         for (const auto &item : t) { \
-            serialize_helper<T>::serialize_template(item, s, offset); \
+            serialize_helper<T, copy>::serialize_template(item, s, offset); \
         } \
         return ; \
     } \
@@ -272,25 +222,16 @@ GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::multiset);
 GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_multiset);
 
 
-template <class T, std::size_t N>
-struct serialize_size_helper<std::array<T, N>> {
-    static auto serialize_template(const std::array<T, N> &t, std::size_t &offset) {
-        unsigned int size = t.size();
-        offset += sizeof(size);
-        for (const auto &item : t) {
-            serialize_size_helper<T>::serialize_template(item, offset);
-        }
-        return ;
-    }
-};
-template <class T, std::size_t N>
-struct serialize_helper<std::array<T, N>> {
+template <class T, std::size_t N, bool copy>
+struct serialize_helper<std::array<T, N>, copy> {
     static auto serialize_template(const std::array<T, N> &t, std::string &s, std::size_t &offset) {
         unsigned int size = t.size();
-        memcpy(&s[offset], &size, sizeof(size));
+        if constexpr (copy) {
+            memcpy(&s[offset], &size, sizeof(size));
+        }
         offset += sizeof(size);
         for (const auto &item : t) {
-            serialize_helper<T>::serialize_template(item, s, offset);
+            serialize_helper<T, copy>::serialize_template(item, s, offset);
         }
         return ;
     }
@@ -308,25 +249,17 @@ struct deserialize_helper<std::array<T, N>> {
     }
 };
 
-template <class T>
-struct serialize_size_helper<std::optional<T>> {
-    static auto serialize_template(const std::optional<T> &t, std::size_t &offset) {
-        bool exist = t.has_value();
-        offset += sizeof(exist);
-        if (exist) {
-            serialize_size_helper<T>::serialize_template(t.value(), offset);
-        }
-        return ;
-    }
-};
-template <class T>
-struct serialize_helper<std::optional<T>> {
+
+template <class T, bool copy>
+struct serialize_helper<std::optional<T>, copy> {
     static auto serialize_template(const std::optional<T> &t, std::string &s, std::size_t &offset) {
         bool exist = t.has_value();
-        memcpy(&s[offset], &exist, sizeof(exist));
+        if constexpr (copy) {
+            memcpy(&s[offset], &exist, sizeof(exist));
+        }
         offset += sizeof(exist);
         if (exist) {
-            serialize_helper<T>::serialize_template(t.value(), s, offset);
+            serialize_helper<T, copy>::serialize_template(t.value(), s, offset);
         }
         return ;
     }
@@ -346,19 +279,11 @@ struct deserialize_helper<std::optional<T>> {
 };
 
 
-template <class T, class U>
-struct serialize_size_helper<std::pair<T, U>> {
-    static auto serialize_template(const std::pair<T, U> &t, std::size_t &offset) {
-        serialize_size_helper<T>::serialize_template(t.first, offset);
-        serialize_size_helper<U>::serialize_template(t.second, offset);
-        return ;
-    }
-};
-template <class T, class U>
-struct serialize_helper<std::pair<T, U>> {
+template <class T, class U, bool copy>
+struct serialize_helper<std::pair<T, U>, copy> {
     static auto serialize_template(const std::pair<T, U> &t, std::string &s, std::size_t &offset) {
-        serialize_helper<T>::serialize_template(t.first, s, offset);
-        serialize_helper<U>::serialize_template(t.second, s, offset);
+        serialize_helper<T, copy>::serialize_template(t.first, s, offset);
+        serialize_helper<U, copy>::serialize_template(t.second, s, offset);
         return ;
     }
 };
@@ -372,25 +297,16 @@ struct deserialize_helper<std::pair<T, U>> {
 };
 
 
-template <class T>
-struct serialize_size_helper<std::unique_ptr<T>> {
-    static auto serialize_template(const std::unique_ptr<T> &t, std::size_t &offset) {
-        bool exist = t.get();
-        offset += sizeof(exist);
-        if (exist) {
-            serialize_size_helper<T>::serialize_template(*t, offset);
-        }
-        return ;
-    }
-};
-template <class T>
-struct serialize_helper<std::unique_ptr<T>> {
+template <class T, bool copy>
+struct serialize_helper<std::unique_ptr<T>, copy> {
     static auto serialize_template(const std::unique_ptr<T> &t, std::string &s, std::size_t &offset) {
         bool exist = t.get();
-        memcpy(&s[offset], &exist, sizeof(exist));
+        if constexpr (copy) {
+            memcpy(&s[offset], &exist, sizeof(exist));
+        }
         offset += sizeof(exist);
         if (exist) {
-            serialize_helper<T>::serialize_template(*t, s, offset);
+            serialize_helper<T, copy>::serialize_template(*t, s, offset);
         }
         return ;
     }
@@ -411,29 +327,22 @@ struct deserialize_helper<std::unique_ptr<T>> {
 };
 
 
-template <class T>
-struct serialize_size_helper<std::forward_list<T>> {
-    static auto serialize_template(const std::forward_list<T> &t, std::size_t &offset) {
-        unsigned int size{};
-        offset += sizeof(size);
-        for (const auto &item : t) {
-            serialize_size_helper<T>::serialize_template(item, offset);
-        }
-        return ;
-    }
-};
-template <class T>
-struct serialize_helper<std::forward_list<T>> {
+template <class T, bool copy>
+struct serialize_helper<std::forward_list<T>, copy> {
     static auto serialize_template(const std::forward_list<T> &t, std::string &s, std::size_t &offset) {
         unsigned int size{};
         auto offset_back = offset;
-        memcpy(&s[offset], &size, sizeof(size));
+        if constexpr (copy) {
+            memcpy(&s[offset], &size, sizeof(size));
+        }
         offset += sizeof(size);
         for (const auto &item : t) {
             size++;
-            serialize_helper<T>::serialize_template(item, s, offset);
+            serialize_helper<T, copy>::serialize_template(item, s, offset);
         }
-        memcpy(&s[offset_back], &size, sizeof(size));
+        if constexpr (copy) {
+            memcpy(&s[offset_back], &size, sizeof(size));
+        }
         return ;
     }
 };
@@ -454,20 +363,11 @@ struct deserialize_helper<std::forward_list<T>> {
 };
 
 
-template <class ...Args>
-struct serialize_size_helper<std::tuple<Args...>> {
-    static auto serialize_template(const std::tuple<Args...> &t, std::size_t &offset) {
-        [&]<std::size_t... index>(std::index_sequence<index...>) {
-            ((serialize_size_helper<remove_cvref_t<std::tuple_element_t<index, std::tuple<Args...>>>>::serialize_template(std::get<index>(t), offset)), ...);
-        } (std::make_index_sequence<sizeof...(Args)>{});
-        return ;
-    }
-};
-template <class ...Args>
-struct serialize_helper<std::tuple<Args...>> {
+template <class ...Args, bool copy>
+struct serialize_helper<std::tuple<Args...>, copy> {
     static auto serialize_template(const std::tuple<Args...> &t, std::string &s, std::size_t &offset) {
         [&]<std::size_t... index>(std::index_sequence<index...>) {
-            ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, std::tuple<Args...>>>>::serialize_template(std::get<index>(t), s, offset)), ...);
+            ((serialize_helper<remove_cvref_t<std::tuple_element_t<index, std::tuple<Args...>>>, copy>::serialize_template(std::get<index>(t), s, offset)), ...);
         } (std::make_index_sequence<sizeof...(Args)>{});
         return ;
     }
@@ -528,25 +428,14 @@ inline constexpr auto switch_variant_type(T &t, std::size_t index) {
 #undef GENERATE_VARIANT_CONSTRUCT_HELPER
 
 
-template <class ...Args>
-struct serialize_size_helper<std::variant<Args...>> {
-    static auto serialize_template(const std::variant<Args...> &t, std::size_t &offset) {
-        unsigned int index = t.index();
-        offset += sizeof(index);
-        std::visit([&](const auto &value) {
-            serialize_size_helper<remove_cvref_t<decltype(value)>>::serialize_template(value, offset);
-        }, t);
-        return ;
-    }
-};
-template <class ...Args>
-struct serialize_helper<std::variant<Args...>> {
+template <class ...Args, bool copy>
+struct serialize_helper<std::variant<Args...>, copy> {
     static auto serialize_template(const std::variant<Args...> &t, std::string &s, std::size_t &offset) {
         unsigned int index = t.index();
         memcpy(&s[offset], &index, sizeof(index));
         offset += sizeof(index);
         std::visit([&](const auto &value) {
-            serialize_helper<remove_cvref_t<decltype(value)>>::serialize_template(value, s, offset);
+            serialize_helper<remove_cvref_t<decltype(value)>, copy>::serialize_template(value, s, offset);
         }, t);
         return ;
     }
@@ -567,10 +456,10 @@ struct deserialize_helper<std::variant<Args...>> {
 
 auto serialize = [](auto &&t, auto &&s) -> auto {
     std::size_t size{};
-    serialize_size_helper<remove_cvref_t<decltype(t)>>::serialize_template(t, size);
+    serialize_helper<remove_cvref_t<decltype(t)>, false>::serialize_template(t, s, size);
     s.resize(size);
     std::size_t offset{};
-    serialize_helper<remove_cvref_t<decltype(t)>>::serialize_template(t, s, offset);
+    serialize_helper<remove_cvref_t<decltype(t)>, true>::serialize_template(t, s, offset);
 };
 
 auto deserialize = [](auto &&s, auto &&t) -> auto {
@@ -583,6 +472,3 @@ auto deserialize = [](auto &&s, auto &&t) -> auto {
 #undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
 #undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 }
-
-
-// todo: std::in_place_t
