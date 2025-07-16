@@ -12,10 +12,11 @@ struct Vec {
 
 void TEST_CASE1() {
     Vec vec1{{1}, {{2}, {3}}};
-    std::string s;
-    otas_serializer::serialize(vec1, s);
-    Vec vec2{};
-    otas_serializer::deserialize(s, vec2);
+    auto s = otas_serializer::serialize<Vec>(vec1);
+    auto vec2 = otas_serializer::deserialize<Vec>(s);
+
+    std::cout << vec1.a[0] << vec2.a[0] << std::endl;
+
     assert(vec1.a.size() == vec2.a.size());
     assert(vec1.a[0] == vec2.a[0]);
     assert(vec1.b.size() == vec2.b.size());

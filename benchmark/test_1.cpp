@@ -16,10 +16,8 @@ struct Node {
 
 void TEST_CASE1() {
     Node node1{-1, 2, -3, 4, 5.5, 6.6, '7'};
-    std::string s;
-    otas_serializer::serialize(node1, s);
-    Node node2{};
-    otas_serializer::deserialize(s, node2);
+    auto s = otas_serializer::serialize<Node>(node1);
+    auto node2 = otas_serializer::deserialize<Node>(s);
     assert(node1.a == node2.a);
     assert(node1.b == node2.b);
     assert(node1.c == node2.c);
