@@ -18,12 +18,14 @@
 #include <string>
 #include <cassert>
 
+#include "otas_macro.h"
 #include "otas_reflection.h"
+#include <iostream>
 namespace otas_serializer {
 
 template <class T, class Buffer, bool copy>
 struct serialize_helper {
-    static auto serialize_template(const T &t, Buffer &s, std::size_t &offset) {
+    ALWAYS_INLINE static auto serialize_template(const T &t, Buffer &s, std::size_t &offset) {
         if constexpr (std::is_trivially_copyable_v<T>) {
             if constexpr (copy) {
                 memcpy(&s[offset], &t, sizeof(t));
@@ -66,7 +68,7 @@ struct serialize_helper<std::string, Buffer, copy> {
         }
         offset += sizeof(size);
         if constexpr (copy) {
-            memcpy(&s[offset], &t, sizeof(t));
+            memcpy(&s[offset], &t, size);
         }
         offset += size;
         return ;
@@ -127,8 +129,8 @@ struct serialize_helper<std::vector<T>, Buffer, copy> {
             }
             offset += size * sizeof(T);
         } else {
-            for (const auto &item : t) {
-                serialize_helper<T, Buffer, copy>::serialize_template(item, s, offset);
+            for (unsigned int index = 0; index < size; index++) {
+                serialize_helper<T, Buffer, copy>::serialize_template(t[index], s, offset);
             }
         }
         return ;
@@ -141,8 +143,13 @@ struct deserialize_helper<std::vector<T>, Buffer> {
         memcpy(&size, &s[offset], sizeof(size));
         offset += sizeof(size);
         t.resize(size);
-        for (auto &item : t) {
-            deserialize_helper<T, Buffer>::deserialize_template(s, item, offset);
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            memcpy(t.data(), &s[offset], sizeof(T) * size);
+            offset += sizeof(T) * size;
+        } else {
+            for (unsigned int index = 0; index < size; index++) {
+                deserialize_helper<T, Buffer>::deserialize_template(s, t[index], offset);
+            }
         }
     }
 };
@@ -259,13 +266,15 @@ GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_multiset);
 template <class T, std::size_t N, class Buffer, bool copy>
 struct serialize_helper<std::array<T, N>, Buffer, copy> {
     static auto serialize_template(const std::array<T, N> &t, Buffer &s, std::size_t &offset) {
-        unsigned int size = t.size();
-        if constexpr (copy) {
-            memcpy(&s[offset], &size, sizeof(size));
-        }
-        offset += sizeof(size);
-        for (const auto &item : t) {
-            serialize_helper<T, Buffer, copy>::serialize_template(item, s, offset);
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            if constexpr (copy) {
+                memcpy(&s[offset], t.data(), N * sizeof(T));
+            }
+            offset += N * sizeof(T);
+        } else {
+            for (unsigned int index = 0; index < N; index++) {
+                serialize_helper<T, Buffer, copy>::serialize_template(t[index], s, offset);
+            }
         }
         return ;
     }
@@ -273,11 +282,13 @@ struct serialize_helper<std::array<T, N>, Buffer, copy> {
 template <class T, std::size_t N, class Buffer>
 struct deserialize_helper<std::array<T, N>, Buffer> {
     static auto deserialize_template(const Buffer &s, std::array<T, N> &t, std::size_t &offset) {
-        unsigned int size;
-        memcpy(&size, &s[offset], sizeof(size));
-        offset += sizeof(size);
-        for (unsigned int index = 0; index < size; index++) {
-            deserialize_helper<T, Buffer>::deserialize_template(s, t[index], offset);
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            memcpy(t.data(), sizeof(T) * N);
+            offset += sizeof(T) * N;
+        } else {
+            for (unsigned int index = 0; index < N; index++) {
+                deserialize_helper<T, Buffer>::deserialize_template(s, t[index], offset);
+            }
         }
         return ;
     }
@@ -497,6 +508,8 @@ struct otas_buffer {
     char *ptr{};
     unsigned int len{};
 };
+
+
 
 template <class T>
 auto serialize(const T &t) {
