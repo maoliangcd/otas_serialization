@@ -46,6 +46,11 @@ struct member_tuple_helper<T, n> { \
         auto &&[__VA_ARGS__] = t; \
         return std::tie(__VA_ARGS__); \
     } \
+    inline static T obj{}; \
+    inline constexpr static auto static_tuple_view() { \
+        auto &&[__VA_ARGS__] = obj; \
+        return std::tie(__VA_ARGS__); \
+    } \
 } \
 
 GENERATE_TEMPLATE(1, f0);

@@ -20,6 +20,7 @@
 
 #include "otas_macro.h"
 #include "otas_reflection.h"
+#include "otas_check.h"
 #include <iostream>
 namespace otas_serializer {
 
@@ -509,24 +510,30 @@ struct otas_buffer {
     unsigned int len{};
 };
 
-
-
 template <class T>
 auto serialize(const T &t) {
-    std::size_t size{};
+    std::size_t size{4};
     otas_buffer s{};
     serialize_helper<T, char *, false>::serialize_template(t, s.ptr, size);
     s.ptr = new char[size];
+    auto check_code = check_code_helper<T>::value;
+    memcpy(s.ptr, &check_code, 4);
     s.len = size;
-    std::size_t offset{};
+    std::size_t offset{4};
     serialize_helper<T, char *, true>::serialize_template(t, s.ptr, offset);
     return s;
 };
 
 template <class T>
 auto deserialize(const otas_buffer &buffer) {
-    std::size_t offset{};
+    unsigned int check_code;
+    memcpy(&check_code, buffer.ptr, 4);
+    std::size_t offset{4};
     T t{};
+    if (check_code != check_code_helper<T>::value) {
+        std::cout << "failed!" << std::endl;
+        return t;
+    }
     deserialize_helper<T, char *>::deserialize_template(buffer.ptr, t, offset);
     return t;
 };

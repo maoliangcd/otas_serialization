@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include "otas_check.h"
+
 struct Node {
     int a;
     unsigned int b;
@@ -12,6 +14,10 @@ struct Node {
     float e;
     double f;
     char g;
+};
+
+struct Leaf {
+    int a;
 };
 
 void TEST_CASE1() {
