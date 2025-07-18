@@ -2,20 +2,6 @@
 
 #include <tuple>
 #include <cstdint>
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <unordered_map>
-#include <vector>
-#include <list>
-#include <queue>
-#include <deque>
-#include <array>
-#include <optional>
-#include <memory>
-#include <forward_list>
-#include <variant>
-#include <string>
 #include <cassert>
 
 #include "otas_macro.h"

@@ -36,5 +36,6 @@ void TEST_CASE1() {
 int main() {
     TEST_CASE1();
     std::cout << "test_1 passed" << std::endl;
+    std::cout << otas_serializer::type_name<Node>() << std::endl;
     return 0;
 }

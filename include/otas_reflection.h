@@ -1,6 +1,21 @@
 #pragma once
 
 #include <type_traits>
+#include <set>
+#include <unordered_set>
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <list>
+#include <queue>
+#include <deque>
+#include <array>
+#include <optional>
+#include <memory>
+#include <forward_list>
+#include <variant>
+#include <string>
+#include <tuple>
 
 namespace otas_serializer {
 
@@ -51,7 +66,7 @@ struct member_tuple_helper<T, n> { \
         auto &&[__VA_ARGS__] = obj; \
         return std::tie(__VA_ARGS__); \
     } \
-} \
+}
 
 GENERATE_TEMPLATE(1, f0);
 GENERATE_TEMPLATE(2, f0, f1);
