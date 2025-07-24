@@ -14,14 +14,6 @@ constexpr unsigned int code_generate(const std::string_view &s) {
 }
 
 template <class T>
-constexpr std::string_view type_name() {
-    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
-    auto l = function_name.find("= ");
-    auto r = function_name.find(";");
-    return function_name.substr(l + 2, r - l - 2);
-}
-
-template <class T>
 struct check_code_struct;
 
 template <class T>
@@ -38,7 +30,7 @@ struct check_code_struct {
             if constexpr (count != 0) {
                 auto members = member_tuple_helper<T, count>::static_tuple_view();
                 [&]<std::size_t... index>(std::index_sequence<index...>) {
-                    ((code *= 998244353, code += check_code_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::value), ...);
+                    ((code *= 998244353, code += check_code_helper<std::remove_pointer_t<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>>::value), ...);
                 } (std::make_index_sequence<count>{});
             }
         }

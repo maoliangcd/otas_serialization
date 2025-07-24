@@ -50,6 +50,11 @@ struct member_tuple_helper {
     }
 };
 
+template <class T>
+struct fake_obj {
+    inline static T value{};
+};
+
 #define GENERATE_TEMPLATE(n, ...) \
 template <class T> \
 struct member_tuple_helper<T, n> { \
@@ -61,10 +66,13 @@ struct member_tuple_helper<T, n> { \
         auto &&[__VA_ARGS__] = t; \
         return std::tie(__VA_ARGS__); \
     } \
-    inline static T obj{}; \
     inline constexpr static auto static_tuple_view() { \
-        auto &&[__VA_ARGS__] = obj; \
-        return std::tie(__VA_ARGS__); \
+        auto &&[__VA_ARGS__] = fake_obj<T>::value; \
+        auto refs = std::tie(__VA_ARGS__); \
+        auto function = [](auto &...ref) { \
+            return std::make_tuple(&ref...); \
+        }; \
+        return std::apply(function, refs); \
     } \
 }
 
@@ -86,5 +94,35 @@ GENERATE_TEMPLATE(15, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13
 GENERATE_TEMPLATE(16, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
 
 #undef GENERATE_TEMPLATE
+
+template <class T>
+inline constexpr std::string_view type_name() {
+    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
+    auto l = function_name.find("= ");
+    auto r = function_name.find(";");
+    return function_name.substr(l + 2, r - l - 2);
+}
+
+
+template <auto T>
+inline constexpr std::string_view member_name() {
+    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
+    auto r = function_name.find(");");
+    auto l = function_name.substr(0, r).rfind("::");
+    return function_name.substr(l + 2, r - l - 2);
+}
+
+template <class T>
+struct member_name_helper {
+    inline constexpr static auto tuple_name() {
+        constexpr auto count = get_member_count<T>();
+        constexpr auto members = member_tuple_helper<T, count>::static_tuple_view();
+        std::array<std::string_view, count> arr;
+        [&]<std::size_t... index>(std::index_sequence<index...>) {
+            ((arr[index] = member_name<std::get<index>(members)>()), ...);
+        } (std::make_index_sequence<count>{});
+        return arr;
+    }
+};
 
 }
