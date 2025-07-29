@@ -172,3 +172,49 @@ auto members = member_tuple_helper<T, count>::tuple_view(t);
 ```
 
 由于从`std::tuple`中获得元素时下标必须是常量，因此无法通过for循环来遍历，需要编译期递归。**C++17**支持**constexpr lambda**，即编译期的lambda函数。通过逗号语义实现可变参数的解包，`std::index_sequence`生成常量下标序列，就可以遍历每个成员。至此静态反射的部分结束，我们有了不需要一行代码就能遍历结构体的方法，下面只需要在visit方法里实现序列化即可。
+
+
+
+
+#### 4. 序列化实现
+
+上一节中，我们已经完成静态反射的部分，但工作并没有就此结束，序列化实现仍然是一个复杂的工程。首先，我们要选择一种buffer来存储序列化后的数据。`std::string`是一个不错的选择。
+
+接下来，我们需要对每种基本类型进行特化。
+```cpp
+template <>
+struct serialize_helper<int> {
+    static auto serialize_template(const int &t, std::string &s) {
+        s.append(reinterpret_cast<char *>(&t), sizeof(t));
+        return ;
+    }
+};
+```
+由于基本类型很多，可以用宏定义来帮助简化代码：
+```cpp
+#define GENERATE_TEMPLATE(T) \
+template <> \
+struct serialize_helper<T> { \
+    static auto serialize_template(const T &t, std::string &s) { \
+        s.append(reinterpret_cast<char *>(&t), sizeof(t)); \
+        return ; \
+    } \
+}
+
+GENERATE_TEMPLATE(int);
+GENERATE_TEMPLATE(double);
+GENERATE_TEMPLATE(float);
+...
+```
+但这非常不优雅，有没有更好的实现？
+
+
+##### 可平凡复制
+`C++11`中，引入了**平凡类型**这一概念，并且提供了`std::is_trivially_copyable<T>`来判断一个类型是否是可平凡复制的。如果是，则该类型可以通过`memcpy`或`memmove`直接进行复制。而显然，所有的基本类型都是可平凡复制的。
+因此，可以直接在未特化版本里加上这样一段：
+```cpp
+if constexpr (std::is_trivially_copyable_v<T>) {
+    s.append(reinterpret_cast<char *>(&t), sizeof(t));
+}
+```
+`if constexpr`是模板元编程的利器，会在编译时就根据对应结果生成相关代码。
