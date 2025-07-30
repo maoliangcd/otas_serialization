@@ -52,7 +52,6 @@ auto serialize(const T &obj)
 template <class T, class Buffer = std::string>
 auto deserialize(const Buffer &buffer)
 ```
-`otas_serializer::deserialize(auto &&obj, auto &&buffer)`
 | 参数 | 类型| 说明 |
 | :--- | :--- | :--- |
 | buffer | 入参 | 存储序列化字节流的buffer |
