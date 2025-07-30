@@ -51,8 +51,8 @@ bool，成功返回true，失败返回false
 `otas_serializer::deserialize(auto &&obj, auto &&buffer)`
 | 参数 | 类型| 说明 |
 | :--- | :--- | :--- |
-| obj | 入参 | 反序列化的对象|
-| buffer | 出参 | 存储序列化字节流的buffer |
+| obj | 出参 | 反序列化的对象|
+| buffer | 入参 | 存储序列化字节流的buffer |
 
 返回值：
 bool，成功返回true，失败返回false
@@ -67,8 +67,10 @@ bool，成功返回true，失败返回false
 进行序列化的struct需满足以下条件：
 1. 无构造函数，或只有默认构造函数
 2. 无private成员
-3. 不包含未支持的STL容器
-4. 不是派生类
+3. 不包含裸指针
+4. 不包含未支持的STL容器
+5. 不是派生类
+6. 成员个数不超过16个（可自行配置上限）
 
 ### 6.对buffer的约束
 接受序列化结果的buffer需满足以下约束：
