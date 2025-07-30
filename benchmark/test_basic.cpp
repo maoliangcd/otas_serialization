@@ -21,7 +21,7 @@ void TEST_CASE1() {
     std::string s;
     otas_serializer::serialize(node1, s);
     Node node2;
-    otas_serializer::deserialize(s, node2);
+    otas_serializer::deserialize(node2, s);
     assert(node1.a == node2.a);
     assert(node1.b == node2.b);
     assert(node1.c == node2.c);
@@ -41,7 +41,7 @@ void TEST_CASE2() {
     std::string s;
     otas_serializer::serialize(st1, s);
     St st2;
-    otas_serializer::deserialize(s, st2);
+    otas_serializer::deserialize(st2, s);
     assert(st1.s == st2.s);
     assert(st1.ws == st2.ws);
 }
@@ -56,7 +56,7 @@ void TEST_CASE3() {
     std::string s;
     otas_serializer::serialize(vec1, s);
     Vec vec2;
-    otas_serializer::deserialize(s, vec2);
+    otas_serializer::deserialize(vec2, s);
     assert(vec1.vec.size() == vec2.vec.size());
     for (int i = 0; i < vec1.vec.size(); i++) {
         assert(vec1.vec[i] == vec2.vec[i]);

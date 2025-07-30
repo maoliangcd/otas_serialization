@@ -38,17 +38,17 @@ int main() {
 没错，你不需要添加任何宏定义，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
 
 ### 2.接口
-`otas_serializer::serialize(auto &&t, auto &&s)`
+`otas_serializer::serialize(auto &&obj, auto &&buffer)`
 参数：
-    t: 序列化的对象
-    s: 存储序列化字节流的buffer
+    obj: 序列化的对象
+    buffer: 存储序列化字节流的buffer
 返回值：
     bool，成功返回true，失败返回false
 
-`otas_serializer::deserialize(auto &&s, auto &&t)`
+`otas_serializer::deserialize(auto &&obj, auto &&buffer)`
 参数：
-    s: 存储序列化字节流的buffer
-    t: 反序列化的对象
+    obj: 反序列化的对象
+    buffer: 存储序列化字节流的buffer
 返回值：
     bool，成功返回true，失败返回false
 

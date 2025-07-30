@@ -511,34 +511,32 @@ struct otas_buffer {
     }
 };
 
-auto serialize(auto &&t, auto &&s) {
-    using T = remove_cvref_t<decltype(t)>;
-    using type = remove_cvref_t<decltype(s.data())>;
-
-    type data = const_cast<type>(s.data());
+auto serialize(auto &&obj, auto &&buffer) {
+    using T = remove_cvref_t<decltype(obj)>;
+    using type = remove_cvref_t<decltype(buffer.data())>;
+    type data = const_cast<type>(buffer.data());
     std::size_t size{4};
-    serialize_helper<T, type, false>::serialize_template(t, data, size);
-    s.resize(size);
-    data = s.data();
+    serialize_helper<T, type, false>::serialize_template(obj, data, size);
+    buffer.resize(size);
+    data = buffer.data();
     auto check_code = check_code_helper<T>::value;
     memcpy(data, &check_code, 4);
     std::size_t offset{4};
-    serialize_helper<T, type, true>::serialize_template(t, data, offset);
+    serialize_helper<T, type, true>::serialize_template(obj, data, offset);
     return true;
 };
 
-auto deserialize(auto &&s, auto &&t) {
-    using T = remove_cvref_t<decltype(t)>;
-    using type = remove_cvref_t<decltype(s.data())>;
-
-    type data = const_cast<type>(s.data());
+auto deserialize(auto &&obj, auto &&buffer) {
+    using T = remove_cvref_t<decltype(obj)>;
+    using type = remove_cvref_t<decltype(buffer.data())>;
+    type data = const_cast<type>(buffer.data());
     unsigned int check_code;
     memcpy(&check_code, data, 4);
     std::size_t offset{4};
     if (check_code != check_code_helper<T>::value) {
         return false;
     }
-    deserialize_helper<T, type>::deserialize_template(data, t, offset);
+    deserialize_helper<T, type>::deserialize_template(data, obj, offset);
     return true;
 };
 
