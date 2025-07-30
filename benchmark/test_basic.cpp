@@ -18,8 +18,10 @@ struct Node {
 
 void TEST_CASE1() {
     Node node1{-1, 2, -3, 4, 5.5, 6.6, '7'};
-    auto s = otas_serializer::serialize<Node>(node1);
-    auto node2 = otas_serializer::deserialize<Node>(s);
+    std::string s;
+    otas_serializer::serialize(node1, s);
+    Node node2;
+    otas_serializer::deserialize(s, node2);
     assert(node1.a == node2.a);
     assert(node1.b == node2.b);
     assert(node1.c == node2.c);
@@ -36,8 +38,10 @@ struct St {
 
 void TEST_CASE2() {
     St st1{"abcd", L"abcd"};
-    auto s = otas_serializer::serialize<St>(st1);
-    auto st2 = otas_serializer::deserialize<St>(s);
+    std::string s;
+    otas_serializer::serialize(st1, s);
+    St st2;
+    otas_serializer::deserialize(s, st2);
     assert(st1.s == st2.s);
     assert(st1.ws == st2.ws);
 }
@@ -49,8 +53,10 @@ struct Vec {
 
 void TEST_CASE3() {
     Vec vec1{{1, 2, 3}, {0.1, 0.2, 0.3}};
-    auto s = otas_serializer::serialize<Vec>(vec1);
-    auto vec2 = otas_serializer::deserialize<Vec>(s);
+    std::string s;
+    otas_serializer::serialize(vec1, s);
+    Vec vec2;
+    otas_serializer::deserialize(s, vec2);
     assert(vec1.vec.size() == vec2.vec.size());
     for (int i = 0; i < vec1.vec.size(); i++) {
         assert(vec1.vec[i] == vec2.vec[i]);

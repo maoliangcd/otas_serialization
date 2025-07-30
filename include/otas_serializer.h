@@ -491,37 +491,55 @@ struct deserialize_helper<std::variant<Args...>, Buffer> {
 #undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
 #undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 
-template <class T, class Buffer = std::vector<char>>
-auto serialize(const T &t) {
-    Buffer buffer{};
-    using type = std::remove_cv_t<decltype(buffer.data())>;
-    type data = const_cast<type>(buffer.data());
+struct otas_buffer {
+    char *data_{};
+    unsigned int size_{};
+
+    otas_buffer() = default;
+    ~otas_buffer() {
+        delete[] data_;
+    }
+
+    char *data() const {
+        return data_;
+    }
+    void resize(int size) {
+        delete[] data_;
+        data_ = new char[size];
+        size_ = size;
+        return ;
+    }
+};
+
+auto serialize(auto &&t, auto &&s) {
+    using T = remove_cvref_t<decltype(t)>;
+    using type = remove_cvref_t<decltype(s.data())>;
+
+    type data = const_cast<type>(s.data());
     std::size_t size{4};
     serialize_helper<T, type, false>::serialize_template(t, data, size);
-    buffer.resize(size);
-
-    data = const_cast<type>(buffer.data());
+    s.resize(size);
+    data = s.data();
     auto check_code = check_code_helper<T>::value;
     memcpy(data, &check_code, 4);
     std::size_t offset{4};
     serialize_helper<T, type, true>::serialize_template(t, data, offset);
-    return buffer;
+    return true;
 };
 
-template <class T, class Buffer = std::vector<char>>
-auto deserialize(const Buffer &buffer) {
-    using type = std::remove_cv_t<decltype(buffer.data())>;
-    type data = const_cast<type>(buffer.data());
+auto deserialize(auto &&s, auto &&t) {
+    using T = remove_cvref_t<decltype(t)>;
+    using type = remove_cvref_t<decltype(s.data())>;
+
+    type data = const_cast<type>(s.data());
     unsigned int check_code;
     memcpy(&check_code, data, 4);
     std::size_t offset{4};
-    T t{};
     if (check_code != check_code_helper<T>::value) {
-        // Do your own operation.
-        return t;
+        return false;
     }
     deserialize_helper<T, type>::deserialize_template(data, t, offset);
-    return t;
+    return true;
 };
 
 }
