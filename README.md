@@ -29,7 +29,7 @@ int main() {
     std::string s;
     otas_serializer::serialize(otas1, s);
     Otas otas2;
-    otas_serializer::deserialize(s, otas2);
+    otas_serializer::deserialize(otas2, s);
     std::cout << otas2.a << " " << otas2.b.x << std::endl;
     system("pause");
     return 0;
@@ -39,18 +39,23 @@ int main() {
 
 ### 2.接口
 `otas_serializer::serialize(auto &&obj, auto &&buffer)`
-参数：
-    obj: 序列化的对象
-    buffer: 存储序列化字节流的buffer
+
+| 参数 | 类型| 说明 |
+| :--- | :--- | :--- |
+| obj | 入参 | 序列化的对象|
+| buffer | 出参 | 存储序列化字节流的buffer |
+
 返回值：
-    bool，成功返回true，失败返回false
+bool，成功返回true，失败返回false
 
 `otas_serializer::deserialize(auto &&obj, auto &&buffer)`
-参数：
-    obj: 反序列化的对象
-    buffer: 存储序列化字节流的buffer
+| 参数 | 类型| 说明 |
+| :--- | :--- | :--- |
+| obj | 入参 | 反序列化的对象|
+| buffer | 出参 | 存储序列化字节流的buffer |
+
 返回值：
-    bool，成功返回true，失败返回false
+bool，成功返回true，失败返回false
 
 ### 3.部署
 将`include`目录下的内容复制到你的项目
