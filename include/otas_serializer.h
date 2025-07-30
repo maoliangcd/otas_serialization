@@ -55,7 +55,7 @@ struct serialize_helper<std::string, Buffer, copy> {
         }
         offset += sizeof(size);
         if constexpr (copy) {
-            memcpy(&s[offset], &t, size);
+            memcpy(&s[offset], t.c_str(), size);
         }
         offset += size;
         return ;
@@ -491,36 +491,36 @@ struct deserialize_helper<std::variant<Args...>, Buffer> {
 #undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
 #undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 
-struct otas_buffer {
-    char *ptr{};
-    unsigned int len{};
-};
-
-template <class T>
+template <class T, class Buffer = std::vector<char>>
 auto serialize(const T &t) {
+    Buffer buffer{};
+    using type = std::remove_cv_t<decltype(buffer.data())>;
+    type data = const_cast<type>(buffer.data());
     std::size_t size{4};
-    otas_buffer s{};
-    serialize_helper<T, char *, false>::serialize_template(t, s.ptr, size);
-    s.ptr = new char[size];
+    serialize_helper<T, type, false>::serialize_template(t, data, size);
+    buffer.resize(size);
+
+    data = const_cast<type>(buffer.data());
     auto check_code = check_code_helper<T>::value;
-    memcpy(s.ptr, &check_code, 4);
-    s.len = size;
+    memcpy(data, &check_code, 4);
     std::size_t offset{4};
-    serialize_helper<T, char *, true>::serialize_template(t, s.ptr, offset);
-    return s;
+    serialize_helper<T, type, true>::serialize_template(t, data, offset);
+    return buffer;
 };
 
-template <class T>
-auto deserialize(const otas_buffer &buffer) {
+template <class T, class Buffer = std::vector<char>>
+auto deserialize(const Buffer &buffer) {
+    using type = std::remove_cv_t<decltype(buffer.data())>;
+    type data = const_cast<type>(buffer.data());
     unsigned int check_code;
-    memcpy(&check_code, buffer.ptr, 4);
+    memcpy(&check_code, data, 4);
     std::size_t offset{4};
     T t{};
     if (check_code != check_code_helper<T>::value) {
-        std::cout << "failed!" << std::endl;
+        // Do your own operation.
         return t;
     }
-    deserialize_helper<T, char *>::deserialize_template(buffer.ptr, t, offset);
+    deserialize_helper<T, type>::deserialize_template(data, t, offset);
     return t;
 };
 
