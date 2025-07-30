@@ -37,20 +37,35 @@ int main() {
 ```
 没错，你不需要添加任何宏定义，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
 
-### 2.部署
+### 2.接口
+`otas_serializer::serialize(auto &&t, auto &&s)`
+参数：
+    t: 序列化的对象
+    s: 存储序列化字节流的buffer
+返回值：
+    bool，成功返回true，失败返回false
+
+`otas_serializer::deserialize(auto &&s, auto &&t)`
+参数：
+    s: 存储序列化字节流的buffer
+    t: 反序列化的对象
+返回值：
+    bool，成功返回true，失败返回false
+
+### 3.部署
 将`include`目录下的内容复制到你的项目
 
-### 3.测试
+### 4.测试
 运行`benchmark`下的`.bat`或`.sh`脚本
 
-### 4.对struct的约束
+### 5.对struct的约束
 进行序列化的struct需满足以下条件：
 1. 无构造函数，或只有默认构造函数
 2. 无private成员
 3. 不包含未支持的STL容器
 4. 不是派生类
 
-### 5.对buffer的约束
+### 6.对buffer的约束
 接受序列化结果的buffer需满足以下约束：
 1. 实现`data()`方法和`resize()`方法
 2. `data()`指向的地址空间连续，可通过下标`[]`进行访问
