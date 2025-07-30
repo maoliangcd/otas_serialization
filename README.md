@@ -49,7 +49,7 @@ auto serialize(const T &obj)
 存储序列化字节流的buffer，默认为std::string
 
 ```cpp
-template <class T, class Buffer = std::string>
+template <class T, class Buffer>
 auto deserialize(const Buffer &buffer)
 ```
 | 参数 | 类型| 说明 |
