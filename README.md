@@ -101,9 +101,11 @@ struct otas_buffer {
 - `others(todo)`
 
 ## 性能测试
-在性能测试中，otas_serialization相比其他序列工具展现出较为明显的性能提升。使用`yalantinglibs`给出的用例，进行1000000万次序列化，耗时如下:
+在性能测试中，otas_serialization相比其他序列工具展现出较为明显的性能提升。使用`struct_pack`给出的用例，进行1000000万次序列化，耗时如下:
 
 | | rect | person | monster |
 | :--- | :--- | :--- | :--- |
 | otas_serialization | 24956 us | 68142 us | 260835 us |
-| yalantinglibs | 54036 us | 104073 us | 290281 us | 
+| yalantinglibs | 54036 us | 104073 us | 290281 us |
+
+`struct_pack`使用`std::vector<char>`作为默认buffer，比`otas_serialization`进行性能测试时使用的自定义容器慢，因此两者实际差距比此处展示要小。
