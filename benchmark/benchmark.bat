@@ -7,7 +7,3 @@ cmake --build %build_dir%
 for %%G in (build\*.exe) do (
     "%%G"
 )
-
-for %%G in (build\3rdparty\yalantinglibs\*.exe) do (
-    "%%G"
-)

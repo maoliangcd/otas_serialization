@@ -26,10 +26,8 @@ struct Otas {
 
 int main() {
     Otas otas1{1, {2.0}};
-    std::string s;
-    otas_serializer::serialize(otas1, s);
-    Otas otas2;
-    otas_serializer::deserialize(otas2, s);
+    auto s = otas_serializer::serialize(otas1);
+    auto otas2 = otas_serializer::deserialize<Otas>(s);
     std::cout << otas2.a << " " << otas2.b.x << std::endl;
     system("pause");
     return 0;
@@ -38,24 +36,29 @@ int main() {
 没错，你不需要添加任何宏定义，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
 
 ### 2.接口
-`otas_serializer::serialize(auto &&obj, auto &&buffer)`
+```cpp
+template <class Buffer = std::string, class T>
+auto serialize(const T &obj)
+```
 
 | 参数 | 类型| 说明 |
 | :--- | :--- | :--- |
 | obj | 入参 | 序列化的对象|
-| buffer | 出参 | 存储序列化字节流的buffer |
 
 返回值：
-bool，成功返回true，失败返回false
+存储序列化字节流的buffer，默认为std::string
 
+```cpp
+template <class T, class Buffer = std::string>
+auto deserialize(const Buffer &buffer)
+```
 `otas_serializer::deserialize(auto &&obj, auto &&buffer)`
 | 参数 | 类型| 说明 |
 | :--- | :--- | :--- |
-| obj | 出参 | 反序列化的对象|
 | buffer | 入参 | 存储序列化字节流的buffer |
 
 返回值：
-bool，成功返回true，失败返回false
+反序列化获得的对象
 
 ### 3.部署
 将`include`目录下的内容复制到你的项目
@@ -91,6 +94,14 @@ struct otas_buffer {
         return ;
     }
 };
+```
+样例：
+```cpp
+using namespace otas_serializer;
+
+Otas otas1{1, {2.0}};
+auto s = serialize<otas_buffer>(otas1);
+auto otas2 = deserialize<Otas, otas_buffer>(s);
 ```
 
 ## 支持的类型

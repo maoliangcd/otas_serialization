@@ -495,11 +495,6 @@ struct otas_buffer {
     char *data_{};
     unsigned int size_{};
 
-    otas_buffer() = default;
-    ~otas_buffer() {
-        delete[] data_;
-    }
-
     char *data() const {
         return data_;
     }
@@ -511,10 +506,11 @@ struct otas_buffer {
     }
 };
 
-auto serialize(auto &&obj, auto &&buffer) {
-    using T = remove_cvref_t<decltype(obj)>;
-    using type = remove_cvref_t<decltype(buffer.data())>;
-    type data = const_cast<type>(buffer.data());
+template <class Buffer = std::string, class T>
+auto serialize(const T &obj) {
+    Buffer buffer;
+    using type = decltype(buffer.data());
+    type data = buffer.data();
     std::size_t size{4};
     serialize_helper<T, type, false>::serialize_template(obj, data, size);
     buffer.resize(size);
@@ -523,21 +519,22 @@ auto serialize(auto &&obj, auto &&buffer) {
     memcpy(data, &check_code, 4);
     std::size_t offset{4};
     serialize_helper<T, type, true>::serialize_template(obj, data, offset);
-    return true;
+    return buffer;
 };
 
-auto deserialize(auto &&obj, auto &&buffer) {
-    using T = remove_cvref_t<decltype(obj)>;
-    using type = remove_cvref_t<decltype(buffer.data())>;
-    type data = const_cast<type>(buffer.data());
+template <class T, class Buffer = std::string>
+auto deserialize(const Buffer &buffer) {
+    using type = decltype(buffer.data());
+    type data = buffer.data();
     unsigned int check_code;
     memcpy(&check_code, data, 4);
     std::size_t offset{4};
+    T obj{};
     if (check_code != check_code_helper<T>::value) {
-        return false;
+        return obj;
     }
     deserialize_helper<T, type>::deserialize_template(data, obj, offset);
-    return true;
+    return obj;
 };
 
 }

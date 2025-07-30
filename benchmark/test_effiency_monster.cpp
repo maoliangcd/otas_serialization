@@ -29,8 +29,8 @@ int main() {
         {{"m1", 1}, {"m2", 2}, {"m3", 3}}, {"doctor", 0}, {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}};
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1000000; i++) {
-        otas_serializer::otas_buffer s;
-        otas_serializer::serialize(monster0, s);
+        auto s = otas_serializer::serialize<otas_serializer::otas_buffer>(monster0);
+        delete[] s.data_;
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

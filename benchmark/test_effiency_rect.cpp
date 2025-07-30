@@ -13,8 +13,8 @@ int main() {
     rect rect0{1, 2, 3, 4};
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1000000; i++) {
-        otas_serializer::otas_buffer s;
-        otas_serializer::serialize(rect0, s);
+        auto s = otas_serializer::serialize<otas_serializer::otas_buffer>(rect0);
+        delete[] s.data_;
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
