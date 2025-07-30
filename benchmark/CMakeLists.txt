@@ -10,9 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/../include)
 
-add_executable(test_1 test_1.cpp)
-add_executable(test_2 test_2.cpp)
-add_executable(test_3 test_3.cpp)
-add_executable(test_effiency_vec test_effiency_vec.cpp)
-add_executable(test_effiency_map test_effiency_map.cpp)
-add_executable(test_effiency_array test_effiency_array.cpp)
+add_executable(test_basic test_basic.cpp)
+# add_executable(test_effiency_monster test_effiency_monster.cpp)
+# add_executable(test_effiency_person test_effiency_person.cpp)
+# add_executable(test_effiency_rect test_effiency_rect.cpp)
