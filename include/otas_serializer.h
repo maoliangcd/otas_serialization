@@ -522,7 +522,7 @@ auto serialize(const T &obj) {
     return buffer;
 };
 
-template <class T, class Buffer = std::string>
+template <class T, class Buffer>
 auto deserialize(const Buffer &buffer) {
     using type = decltype(buffer.data());
     type data = buffer.data();

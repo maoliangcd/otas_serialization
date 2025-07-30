@@ -100,7 +100,7 @@ using namespace otas_serializer;
 
 Otas otas1{1, {2.0}};
 auto s = serialize<otas_buffer>(otas1);
-auto otas2 = deserialize<Otas, otas_buffer>(s);
+auto otas2 = deserialize<Otas>(s);
 ```
 
 ## 支持的类型
