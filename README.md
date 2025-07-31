@@ -9,6 +9,8 @@
 
 这是一个只包含头文件的序列化库。不需要额外的配置文件和宏定义。
 
+本项目参考自[yalantinglibs](https://github.com/alibaba/yalantinglibs)
+
 ## 快速开始:
 ### 1.示例
 ```cpp
