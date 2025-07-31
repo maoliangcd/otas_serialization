@@ -63,9 +63,39 @@ void TEST_CASE3() {
     }
 }
 
+struct Mp {
+    std::map<int, double> a;
+};
+
+void TEST_CASE4() {
+    Mp mp1{{{1, 0.1}, {2, 0.2}}};
+    auto s = serialize(mp1);
+    auto mp2 = deserialize<Mp>(s);
+    assert(mp1.a.size() == mp2.a.size());
+    assert(mp1.a[1] == mp2.a[1]);
+    assert(mp1.a[2] == mp2.a[2]);
+}
+
+struct Set {
+    std::set<double> a;
+};
+
+void TEST_CASE5() {
+    Set set1{{0.1, 0.2, 0.3, 0.4}};
+    auto s = serialize(set1);
+    auto set2 = deserialize<Set>(s);
+    assert(set1.a.size() == set2.a.size());
+    for (auto item : set1.a) {
+        assert(set2.a.find(item) != set2.a.end());
+    }
+}
+
 int main() {
     TEST_CASE1();
     TEST_CASE2();
+    TEST_CASE3();
+    TEST_CASE4();
+    TEST_CASE5();
     std::cout << "test_basic passed" << std::endl;
     return 0;
 }

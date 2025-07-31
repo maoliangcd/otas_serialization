@@ -10,6 +10,32 @@
 #include <iostream>
 namespace otas_serializer {
 
+template <class T>
+concept map_container = requires(T container) {
+    typename T::key_type;
+    typename T::mapped_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+
+template <class T>
+concept set_container = requires(T container) {
+    typename T::key_type;
+    typename T::value_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+
+template <class T>
+concept list_container = requires(T container) {
+    typename T::value_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+
 template <class T, class Buffer, bool copy>
 struct serialize_helper {
     ALWAYS_INLINE static auto serialize_template(const T &t, Buffer &s, std::size_t &offset) {
@@ -18,7 +44,36 @@ struct serialize_helper {
                 memcpy(&s[offset], &t, sizeof(t));
             }
             offset += sizeof(t);
-        } else {
+        } else if constexpr (map_container<T>) {
+            unsigned int size = t.size();
+            if constexpr (copy) {
+                memcpy(&s[offset], &size, sizeof(size));
+            }
+            offset += sizeof(size);
+            for (const auto &pair : t) {
+                serialize_helper<typename T::key_type, Buffer, copy>::serialize_template(pair.first, s, offset);
+                serialize_helper<typename T::mapped_type, Buffer, copy>::serialize_template(pair.second, s, offset);
+            }
+        } else if constexpr (set_container<T>) {
+            unsigned int size = t.size();
+            if constexpr (copy) {
+                memcpy(&s[offset], &size, sizeof(size));
+            }
+            offset += sizeof(size);
+            for (const auto &item : t) {
+                serialize_helper<typename T::key_type, Buffer, copy>::serialize_template(item, s, offset);
+            }
+        } else if constexpr (list_container<T>) {
+            unsigned int size = t.size();
+            if constexpr (copy) {
+                memcpy(&s[offset], &size, sizeof(size));
+            }
+            offset += sizeof(size);
+            for (const auto &item : t) {
+                serialize_helper<typename T::value_type, Buffer, copy>::serialize_template(item, s, offset);
+            }
+        }
+        else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
             [&]<std::size_t... index>(std::index_sequence<index...>) {
@@ -28,12 +83,41 @@ struct serialize_helper {
         return ;
     }
 };
+
 template <class T, class Buffer>
 struct deserialize_helper {
     static auto deserialize_template(const Buffer &s, T &t, std::size_t &offset) {
         if constexpr (std::is_trivially_copyable_v<T>) {
             memcpy(&t, &s[offset], sizeof(t));
             offset += sizeof(t);
+        } else if constexpr (map_container<T>) {
+            unsigned int size;
+            memcpy(&size, &s[offset], sizeof(size));
+            offset += sizeof(size);
+            for (unsigned int index = 0; index < size; index++) {
+                typename T::key_type fi;
+                deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, fi, offset);
+                typename T::mapped_type se;
+                deserialize_helper<typename T::mapped_type, Buffer>::deserialize_template(s, se, offset);
+                t.emplace(fi, se);
+            }
+        } else if constexpr (set_container<T>) {
+            unsigned int size;
+            memcpy(&size, &s[offset], sizeof(size));
+            offset += sizeof(size);
+            for (unsigned int index = 0; index < size; index++) { \
+                typename T::key_type item;
+                deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, item, offset);
+                t.emplace(item);
+            }
+        } else if constexpr (list_container<T>) {
+            unsigned int size;
+            memcpy(&size, &s[offset], sizeof(size));
+            offset += sizeof(size);
+            t.resize(size);
+            for (auto &item : t) {
+                deserialize_helper<typename T::value_type, Buffer>::deserialize_template(s, item, offset);
+            }
         } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
@@ -172,82 +256,7 @@ struct deserialize_helper<type<T>, Buffer> { \
 
 GENERATE_TEMPLATE_ITERATOR_TYPE(std::list);
 GENERATE_TEMPLATE_ITERATOR_TYPE(std::queue);
-GENERATE_TEMPLATE_ITERATOR_TYPE(std::deque);
-
-
-#define GENERATE_TEMPLATE_MAP_TYPE(type) \
-template <class T, class U, class Buffer, bool copy> \
-struct serialize_helper<type<T, U>, Buffer, copy> { \
-    static auto serialize_template(const type<T, U> &t, Buffer &s, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        if constexpr (copy) { \
-            memcpy(&s[offset], &size, sizeof(size)); \
-        } \
-        offset += sizeof(size); \
-        for (const auto &pair : t) { \
-            serialize_helper<T, Buffer, copy>::serialize_template(pair.first, s, offset); \
-            serialize_helper<U, Buffer, copy>::serialize_template(pair.second, s, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T, class U, class Buffer> \
-struct deserialize_helper<type<T, U>, Buffer> { \
-    static auto deserialize_template(const Buffer &s, type<T, U> &t, std::size_t &offset) { \
-        unsigned int size; \
-        memcpy(&size, &s[offset], sizeof(size)); \
-        offset += sizeof(size); \
-        for (unsigned int index = 0; index < size; index++) { \
-            T fi; \
-            deserialize_helper<T, Buffer>::deserialize_template(s, fi, offset); \
-            U se; \
-            deserialize_helper<U, Buffer>::deserialize_template(s, se, offset); \
-            t.emplace(fi, se); \
-        } \
-        return ;\
-    } \
-}
-
-GENERATE_TEMPLATE_MAP_TYPE(std::map);
-GENERATE_TEMPLATE_MAP_TYPE(std::unordered_map);
-GENERATE_TEMPLATE_MAP_TYPE(std::multimap);
-GENERATE_TEMPLATE_MAP_TYPE(std::unordered_multimap);
-
-
-#define GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(type) \
-template <class T, class Buffer, bool copy> \
-struct serialize_helper<type<T>, Buffer, copy> { \
-    static auto serialize_template(const type<T> &t, Buffer &s, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        if constexpr (copy) { \
-            memcpy(&s[offset], &size, sizeof(size)); \
-        } \
-        offset += sizeof(size); \
-        for (const auto &item : t) { \
-            serialize_helper<T, Buffer, copy>::serialize_template(item, s, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T, class Buffer> \
-struct deserialize_helper<type<T>, Buffer> { \
-    static auto deserialize_template(const Buffer &s, type<T> &t, std::size_t &offset) { \
-        unsigned int size; \
-        memcpy(&size, &s[offset], sizeof(size)); \
-        offset += sizeof(size); \
-        for (unsigned int index = 0; index < size; index++) { \
-            T item; \
-            deserialize_helper<T, Buffer>::deserialize_template(s, item, offset); \
-            t.emplace(item); \
-        } \
-        return ; \
-    } \
-} \
-
-GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::set);
-GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_set);
-GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::multiset);
-GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE(std::unordered_multiset);
+// GENERATE_TEMPLATE_ITERATOR_TYPE(std::deque);
 
 
 template <class T, std::size_t N, class Buffer, bool copy>

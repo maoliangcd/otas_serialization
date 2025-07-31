@@ -116,7 +116,7 @@ template <class T>
 struct member_name_helper {
     inline constexpr static auto tuple_name() {
         constexpr auto count = get_member_count<T>();
-        constexpr auto members = member_tuple_helper<T, count>::static_tuple_view();
+        constexpr auto members = member_tuple_helper<T, count>::static_tuple_view_ptr();
         std::array<std::string_view, count> arr;
         [&]<std::size_t... index>(std::index_sequence<index...>) {
             ((arr[index] = member_name<std::get<index>(members)>()), ...);
