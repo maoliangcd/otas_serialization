@@ -29,11 +29,12 @@ concept set_container = requires(T container) {
 };
 
 template <class T>
-concept list_container = requires(T container) {
+concept list_container = requires(T container, unsigned int n) {
     typename T::value_type;
     container.size();
     container.begin();
     container.end();
+    container.resize(n);
 };
 
 template <class T, class Buffer, bool copy>
@@ -224,40 +225,6 @@ struct deserialize_helper<std::vector<T>, Buffer> {
         }
     }
 };
-
-
-#define GENERATE_TEMPLATE_ITERATOR_TYPE(type) \
-template <class T, class Buffer, bool copy> \
-struct serialize_helper<type<T>, Buffer, copy> { \
-    static auto serialize_template(const type<T> &t, Buffer &s, std::size_t &offset) { \
-        unsigned int size = t.size(); \
-        if constexpr (copy) { \
-            memcpy(&s[offset], &size, sizeof(size)); \
-        } \
-        offset += sizeof(size); \
-        for (const auto &item : t) { \
-            serialize_helper<T, Buffer, copy>::serialize_template(item, s, offset); \
-        } \
-        return ; \
-    } \
-}; \
-template <class T, class Buffer> \
-struct deserialize_helper<type<T>, Buffer> { \
-    static auto deserialize_template(const Buffer &s, type<T> &t, std::size_t &offset) { \
-        unsigned int size; \
-        memcpy(&size, &s[offset], sizeof(size)); \
-        offset += sizeof(size); \
-        t.resize(size); \
-        for (auto &item : t) { \
-            deserialize_helper<T, Buffer>::deserialize_template(s, item, offset); \
-        } \
-    } \
-} \
-
-GENERATE_TEMPLATE_ITERATOR_TYPE(std::list);
-GENERATE_TEMPLATE_ITERATOR_TYPE(std::queue);
-// GENERATE_TEMPLATE_ITERATOR_TYPE(std::deque);
-
 
 template <class T, std::size_t N, class Buffer, bool copy>
 struct serialize_helper<std::array<T, N>, Buffer, copy> {
