@@ -90,6 +90,12 @@ void TEST_CASE5() {
     }
 }
 
+template <class T>
+inline constexpr std::string_view type_name1() {
+    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
+    return function_name;
+}
+
 int main() {
     TEST_CASE1();
     TEST_CASE2();
@@ -97,5 +103,6 @@ int main() {
     TEST_CASE4();
     TEST_CASE5();
     std::cout << "test_basic passed" << std::endl;
+    std::cout << type_name1<int>() << std::endl;
     return 0;
 }
