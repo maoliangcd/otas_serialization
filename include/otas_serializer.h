@@ -29,7 +29,7 @@ concept set_container = requires(T container) {
 };
 
 template <class T>
-concept list_container = requires(T container, unsigned int n) {
+concept vector_container = requires(T container, unsigned int n) {
     typename T::value_type;
     container.size();
     container.begin();
@@ -64,7 +64,7 @@ struct serialize_helper {
             for (const auto &item : t) {
                 serialize_helper<typename T::key_type, Buffer, copy>::serialize_template(item, s, offset);
             }
-        } else if constexpr (list_container<T>) {
+        } else if constexpr (vector_container<T>) {
             unsigned int size = t.size();
             if constexpr (copy) {
                 memcpy(&s[offset], &size, sizeof(size));
@@ -111,7 +111,7 @@ struct deserialize_helper {
                 deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, item, offset);
                 t.emplace(item);
             }
-        } else if constexpr (list_container<T>) {
+        } else if constexpr (vector_container<T>) {
             unsigned int size;
             memcpy(&size, &s[offset], sizeof(size));
             offset += sizeof(size);
@@ -461,11 +461,6 @@ struct deserialize_helper<std::variant<Args...>, Buffer> {
         return ;
     }
 };
-
-#undef GENERATE_TEMPLATE_ITERATOR_TYPE
-#undef GENERATE_TEMPLATE_MAP_TYPE
-#undef GENERATE_TEMPLATE_CONTAINER_INSERT_TYPE
-#undef GENERATE_TEMPLATE_SMART_PTR_TYPE
 
 struct otas_buffer {
     char *data_{};

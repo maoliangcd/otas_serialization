@@ -174,16 +174,14 @@ auto members = member_tuple_helper<T, count>::tuple_view(t);
 由于从`std::tuple`中获得元素时下标必须是常量，因此无法通过for循环来遍历，需要编译期递归。**C++17**支持**constexpr lambda**，即编译期的lambda函数。通过逗号语义实现可变参数的解包，`std::index_sequence`生成常量下标序列，就可以遍历每个成员。至此静态反射的部分结束，我们有了不需要一行代码就能遍历结构体的方法，下面只需要在visit方法里实现序列化即可。
 
 
-
-
 ### 4. 序列化实现
 
 #### 4.1 基本类型
-上一节中，我们已经完成静态反射的部分，但工作并没有就此结束，序列化实现仍然是一个复杂的工程。
+上一节中，我们已经完成静态反射的部分，能够在编译期遍历结构体，但序列化实现部分仍然是一个复杂的工程。
 
-首先，我们要选择buffer来存储序列化后的数据。不知道序列化后数据的长度，因此需要选择一种能动态扩容的容器，常规的选择有`std::string`和`std::vector<char>`，这里选择`std::string`。
+首先，我们要选择buffer来存储序列化后的数据。序列化后数据的长度是未知的，因此需要选择能动态扩容的容器，常规的选择有`std::string`、`std::vector<char>`和`std::stringstream`，当然也可以自定义。为了简便，这里用`std::string`进行演示。
 
-接下来，我们需要对基本类型进行特化。这部分相对简单，通过`sizeof`获取类型大小后进行复制即可。比如，对`int`类型进行序列化可以这样：
+对基本类型进行特化相对简单，通过`sizeof`获取类型大小后进行复制即可。比如，对`int`类型进行序列化可以这样：
 ```cpp
 template <>
 struct serialize_helper<int> {
@@ -208,18 +206,18 @@ GENERATE_TEMPLATE(int);
 GENERATE_TEMPLATE(double);
 GENERATE_TEMPLATE(float);
 ```
-但这还是非常不优雅，有没有更好的实现？
+但这还是不太优雅，有没有更好的实现？
 
 
 ##### 可平凡复制
-`C++11`中，引入了**可平凡复制**的概念。通过`std::is_trivially_copyable<T>`来判断一个类型是否是可平凡复制的。如果是，则该类型在内存中连续，并可以通过`memcpy`或`memmove`直接进行复制。显然，所有的基本类型都是可平凡复制的。
-因此，可以直接在未特化版本里加上这样一段：
+`C++11`中，引入了**可平凡复制**的概念，通过`std::is_trivially_copyable<T>`来判断一个类型是否是可平凡复制的。如果是，则该类型在内存中连续，并且可以通过`memcpy`或`memmove`直接进行复制。显然，所有的基本类型都是可平凡复制的。
+因此，直接在未特化版本里加上这样一段，就能够完成对基本类型的序列化：
 ```cpp
 if constexpr (std::is_trivially_copyable_v<T>) {
     s.append(reinterpret_cast<char *>(&t), sizeof(t));
 }
 ```
-同时，由基本类型构成的结构体也是可平凡复制的，比如一个结构体
+若结构体的成员均是可平凡复制的，则结构体也是可平凡复制的，比如下列结构体就是可平凡复制的。但如果要直接复制，还涉及内存对齐的问题，这部分后面再讨论。
 ```cpp
 struct Node {
     int a;
@@ -227,13 +225,11 @@ struct Node {
     double c;
 };
 ```
-也是可平凡复制的。当然，这里涉及到内存对齐的问题，我们后面再讨论。
-
 
 #### 4.2 STL容器
 
 ##### size可变的容器
-对于size可变的STL容器，直观思路是先存储size，再依次存储每个元素。这里同样涉及模板的偏特化，我们只是指定了`std::vector`这个容器，并没有指定具体的类型，这种部分限制就需要使用模板偏特化。比如`std::vector`可以这样：
+对于size可变的STL容器，直观思路是先存储size，再依次存储每个元素。比如`std::vector`可以这样进行序列化：
 ```cpp
 template <class T>
 struct serialize_helper<std::vector<T>> {
@@ -247,7 +243,7 @@ struct serialize_helper<std::vector<T>> {
     }
 };
 ```
-同样，这里的代码也可以通过宏定义来简化实现。我们可以把实现相似的STL容器归为一类，采用宏定义简化代码。比如，`std::map`，`std::unordered_map`，`std::multimap`，`std::unordered_multimap`都是有两个类型，用`insert`或`emplace`插入元素的容器。
+这部分代码可以通过宏定义进行简化。把相似的STL容器归为一类，就能实现代码复用。比如，`std::map`，`std::unordered_map`，`std::multimap`，`std::unordered_multimap`都是有两个类型，用`insert`或`emplace`插入元素的容器。
 ```cpp
 #define GENERATE_TEMPLATE_MAP(type) \
 template <class K, class V> \
@@ -269,7 +265,7 @@ GENERATE_TEMPLATE_MAP(std::multimap);
 GENERATE_TEMPLATE_MAP(std::unordered_multimap);
 ```
 ##### 特殊容器
-还是有些容器不一样的，比如`std::forward_list`没有`size()`方法，需要先预留出存储size的位置，遍历时计算，最后再填充size。
+有些特殊容器，比如`std::forward_list`没有`size()`方法，需要先预留出存储size的位置，遍历时计算，最后再填充size。
 ```cpp
 template <class T>
 struct serialize_helper<std::forward_list<T>> {
@@ -286,13 +282,24 @@ struct serialize_helper<std::forward_list<T>> {
     }
 };
 ```
-`std::optional`没有size，但是有一个bool值标识是否存储了值。
+`std::optional`没有size，用一个bool值标识是否存储了值，需要将这个值一并序列化。
+```cpp
+template <class T>
+struct serialize_helper<std::optional<T>> {
+    static auto serialize_template(const std::optional<T> &t, std::string &s) {
+        bool exist = t.has_value();
+        s.append(reinterpret_cast<char *>(&exist), sizeof(exist));
+        serialize_helper<T, Buffer, copy>::serialize_template(t.value(), s);
+        return ;
+    }
+};
+```
 
-`std::variant`是这些容器中最特殊的。它可以存储任意类型的值。其序列化思路是要存储当前指向哪个类型，而通过`index()`方法获取当前存储的类型的下标，将这个index存储即可。
+`std::variant`是**C++17**提供的类型安全的`union`，它可以存储不同类型的值，通过`index()`方法获取当前存储的类型的下标，序列化时要存储该index。
 
-但是！在反序列化时，`std::variant`可以通过index改变类型，但这个index必须是**编译时常量**。而我们在反序列时，接受到的数据肯定不是编译时常量。那该怎么办呢？
+但是！反序列化存在问题，`std::variant`可以通过index改变类型，但这个index必须是**编译时常量**。反序列化时，接受到的数据不是编译时常量，该怎么办呢？
 
-好消息是，C++允许将某个`std::variant`赋值给另一个`std::variant`，这种赋值可以改变`std::variant`存储的值的类型。因此，我们可以预先创建好存储不同类型的`std::variant`，存储在不同的模板中
+好消息是，C++允许将`std::variant`赋值给另一个`std::variant`，这种赋值可以改变`std::variant`存储的值的类型。因此，我们可以预先创建好存储不同类型的`std::variant`，存储在不同的模板中
 ```cpp
 template <class T, std::size_t index>
 struct switch_variant_type_helper {
@@ -325,8 +332,72 @@ inline constexpr auto switch_variant_type(T &t, std::size_t index) {
     return ;
 }
 ```
+这里也需要硬编码，写到3就只支持3个类型成员的`std::variant`，需要更多可以手动加。
 
 #### 4.3 自定义容器
-正如上面所说，我们在处理相似的类型时，可以通过宏定义来减少重复代码，但这样还是很不优雅，并且有个严重缺陷，不支持自定义容器。
+正如上面所说，在处理相似的类型时，可以通过宏定义来减少重复代码，但这样还不够优雅，并且有个严重缺陷，不支持自定义容器。
 
-问题根源在于，我们还是用人的经验在判断某种容器应该怎样特化，而要支持自定义容器，就必须挖掘出不同容器更深层次上的共同点。
+我们无法支持所有自定义容器。但可以约定一些规则，只要用户遵守这个规则，就能完成容器的序列化和反序列化。对于相似的容器，可以用同一种规则进行约束。如何总结出这些规则呢？以`std::map`这一类容器举例，它们都有`begin()`和`end()`方法来进行遍历，有`size()`方法以获取大小。最关键的是，`std::map`存储的是映射关系，因此有`key_type`和`mapped_type`两个成员用以标识key和value的类型。
+
+那如何来判断一个类型是否满足要求呢？上一篇中，我们介绍了**SFINAE**机制，可以这样写：
+```cpp
+template <class T, class = void>
+struct is_map_container : std::false_type{};
+
+template <class T>
+struct is_map_container<T, std::void_t<decltype(T.begin()), decltype(T.end()), decltype(T.size()), typename T::key_type, typename T::mapped_type>> : std::true_type{};
+```
+如果`std::void_t`中的类型推导失败，会触发SFINAE机制，转而匹配上方的未特化版本。
+
+略显繁琐，因此**C++20**引入`concept`和`require`来对类型进行约束，上述的代码可以改写为：
+```cpp
+template <class T>
+concept map_container = requires(T container) {
+    typename T::key_type;
+    typename T::mapped_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+```
+如此一来，我们就可以定义容器特化的规则，并实现对容器的特化。
+
+### 5. 类型检查
+正常情况下，序列化不会失败，但反序列化时的数据不可靠，可能导致反序列化的失败。例如，网络传输过程中的错误，恶意攻击，又或者单纯搞错反序列化的类型。序列化模块无法识别所有错误，应该由上层的调用者保证数据的合法性。
+
+不过，还是能做一些有限防护的，比如，反序列化前进行类型检查，能够防止大部分的使用错误。传统序列化中，可以给每种类型设置一个校验码，序列化时写入，反序列化时读取进行验证。不过我们不希望让用户手动设置校验码，该怎么办呢？
+
+##### __PRETTY_FUNCTION__
+对于某种类型，类型的名称是标识该类型的最好校验码，下面介绍一种获取类型名称的方法。
+
+C++中没有提供获取函数名称的方法，但各编译器都有自己的实现。在gcc中，通过`__PRETTY_FUNCTION__`这一宏定义来获取当前函数的信息。在模板函数中调用这一宏，它会附带上类型对应的信息。
+
+```cpp
+template <class T>
+inline constexpr std::string_view type_name() {
+    constexpr std::string_view function_name = __PRETTY_FUNCTION__;
+    auto l = function_name.find("= ");
+    auto r = function_name.find(";");
+    return function_name.substr(l + 2, r - l - 2);
+}
+```
+例如，调用`type_name<int>()`时，`function_name`的值是这样的：
+```
+constexpr std::string_view type_name1() [with T = int; std::string_view = std::basic_string_view<char>]
+```
+只需要裁剪出`T = int`中类型名称，进行一些变化(例如md5)即可获得类型的校验码。
+
+##### 校验码计算
+校验码仅依靠类型本身的名称是不够的，很可能出现名称相同但结构不同的类型。把结构体看成一棵树，某个节点的子节点是结构体的不同成员，`code[i]`表示编号为`i`的节点的校验码。接触过算法竞赛的同学应该能看出来，这是个经典的`树形dp`问题，DFS进行遍历，计算出子节点`code[v]`后再根据算法组合成父节点的`code[u]`，最终`code[1]`就是整个结构体的校验码。
+
+本项目采用了较为简单的Hash算法，如下：
+```cpp
+for (auto &v : sons) {
+    code[u] *= 998244353;
+    code[u] += code[v];
+}
+```
+实际情况下，该方法已经能避免大部分犯蠢传错数据的情况。
+
+
+### 6. 性能优化
