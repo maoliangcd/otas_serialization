@@ -92,6 +92,38 @@ GENERATE_TEMPLATE(13, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12);
 GENERATE_TEMPLATE(14, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13);
 GENERATE_TEMPLATE(15, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14);
 GENERATE_TEMPLATE(16, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
+GENERATE_TEMPLATE(17, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16);
+GENERATE_TEMPLATE(18, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17);
+GENERATE_TEMPLATE(19, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18);
+GENERATE_TEMPLATE(20, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19);
+GENERATE_TEMPLATE(21, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20);
+GENERATE_TEMPLATE(22, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21);
+GENERATE_TEMPLATE(23, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22);
+GENERATE_TEMPLATE(24, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23);
+GENERATE_TEMPLATE(25, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24);
+GENERATE_TEMPLATE(26, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25);
+GENERATE_TEMPLATE(27, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26);
+GENERATE_TEMPLATE(28, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27);
+GENERATE_TEMPLATE(29, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28);
+GENERATE_TEMPLATE(30, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29);
+GENERATE_TEMPLATE(31, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30);
+GENERATE_TEMPLATE(32, f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, 
+    f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31);
 
 #undef GENERATE_TEMPLATE
 

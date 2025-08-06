@@ -16,7 +16,7 @@
 ```cpp
 #include <iostream>
 #include <string>
-#include "otas_serializer.h"
+#include "otas/otas_serializer.h"
 
 struct Leaf {
     double x;
@@ -35,7 +35,7 @@ int main() {
     return 0;
 }
 ```
-没错，你不需要添加任何宏定义，不需要编写配置文件。只需要使用在你的代码中调用`otas_serializer::serialize`和`otas_serializer::deserialize`。
+没错，你不需要添加任何宏定义，不需要编写配置文件。只需要在代码中调用给定的接口。
 
 ### 2.接口
 ```cpp
@@ -69,12 +69,12 @@ auto deserialize(const Buffer &buffer)
 
 ### 5.对struct的约束
 进行序列化的struct需满足以下条件：
-1. 无构造函数，或只有默认构造函数
+1. 无自定义构造函数
 2. 无private成员
 3. 不包含裸指针
 4. 不包含未支持的STL容器
 5. 不是派生类
-6. 成员个数不超过16个（可自行配置上限）
+6. 成员个数不超过32个（可自行配置上限）
 
 ### 6.对buffer的约束
 接受序列化结果的buffer需满足以下约束：
@@ -107,7 +107,7 @@ auto otas2 = deserialize<Otas>(s);
 
 ## 支持的类型
 - 基本类型(int, float, double, char...)
-- 聚合类型struct(没有构造函数，没有私有成员)
+- 聚合类型(没有构造函数，没有私有成员)
 - 大多数STL容器
 
 支持以下STL容器：
@@ -132,7 +132,6 @@ auto otas2 = deserialize<Otas>(s);
 - `std::forward_list`
 - `std::tuple`
 - `std::variant`
-- `others(todo)`
 
 ## 性能测试
 在性能测试中，otas_serialization相比其他序列工具展现出较为明显的性能提升。使用`struct_pack`给出的用例，进行1000000万次序列化，耗时如下:
