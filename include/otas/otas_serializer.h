@@ -10,33 +10,6 @@
 #include <iostream>
 namespace otas_serializer {
 
-template <class T>
-concept map_container = requires(T container) {
-    typename T::key_type;
-    typename T::mapped_type;
-    container.size();
-    container.begin();
-    container.end();
-};
-
-template <class T>
-concept set_container = requires(T container) {
-    typename T::key_type;
-    typename T::value_type;
-    container.size();
-    container.begin();
-    container.end();
-};
-
-template <class T>
-concept vector_container = requires(T container, unsigned int n) {
-    typename T::value_type;
-    container.size();
-    container.begin();
-    container.end();
-    container.resize(n);
-};
-
 template <class T, class Buffer, bool copy>
 struct serialize_helper {
     ALWAYS_INLINE static auto serialize_template(const T &t, Buffer &s, std::size_t &offset) {
@@ -64,6 +37,16 @@ struct serialize_helper {
             for (const auto &item : t) {
                 serialize_helper<typename T::key_type, Buffer, copy>::serialize_template(item, s, offset);
             }
+        } else if constexpr (string_container<T>) {
+            unsigned int size = t.length() * sizeof(typename T::value_type);
+            if constexpr (copy) {
+                memcpy(&s[offset], &size, sizeof(size));
+            }
+            offset += sizeof(size);
+            if constexpr (copy) {
+                memcpy(&s[offset], t.data(), size);
+            }
+            offset += size;
         } else if constexpr (vector_container<T>) {
             unsigned int size = t.size();
             if constexpr (copy) {
@@ -73,8 +56,7 @@ struct serialize_helper {
             for (const auto &item : t) {
                 serialize_helper<typename T::value_type, Buffer, copy>::serialize_template(item, s, offset);
             }
-        }
-        else {
+        } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
             [&]<std::size_t... index>(std::index_sequence<index...>) {
@@ -111,6 +93,13 @@ struct deserialize_helper {
                 deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, item, offset);
                 t.emplace(item);
             }
+        } else if constexpr (string_container<T>) {
+            unsigned int size;
+            memcpy(&size, &s[offset], sizeof(size));
+            offset += sizeof(size);
+            t.resize(size / sizeof(typename T::value_type));
+            memcpy(t.data(), &s[offset], size);
+            offset += size;
         } else if constexpr (vector_container<T>) {
             unsigned int size;
             memcpy(&size, &s[offset], sizeof(size));
@@ -129,63 +118,6 @@ struct deserialize_helper {
         return ;
     }
 };
-
-
-template <class Buffer, bool copy>
-struct serialize_helper<std::string, Buffer, copy> {
-    static auto serialize_template(const std::string &t, Buffer &s, std::size_t &offset) {
-        unsigned int size = t.length();
-        if constexpr (copy) {
-            memcpy(&s[offset], &size, sizeof(size));
-        }
-        offset += sizeof(size);
-        if constexpr (copy) {
-            memcpy(&s[offset], t.c_str(), size);
-        }
-        offset += size;
-        return ;
-    }
-};
-template <class Buffer>
-struct deserialize_helper<std::string, Buffer> {
-    static auto deserialize_template(const Buffer &s, std::string &t, std::size_t &offset) {
-        unsigned int size;
-        memcpy(&size, &s[offset], sizeof(size));
-        offset += sizeof(size);
-        t = std::string(&s[offset], size);
-        offset += size;
-        return ;
-    }
-};
-
-
-template <class Buffer, bool copy>
-struct serialize_helper<std::wstring, Buffer, copy> {
-    static auto serialize_template(const std::wstring &t, Buffer &s, std::size_t &offset) {
-        unsigned int size = t.length() * sizeof(wchar_t);
-        if constexpr (copy) {
-            memcpy(&s[offset], &size, sizeof(size));
-        }
-        offset += sizeof(size);
-        if constexpr (copy) {
-            memcpy(&s[offset], t.c_str(), size);
-        }
-        offset += size;
-        return ;
-    }
-};
-template <class Buffer>
-struct deserialize_helper<std::wstring, Buffer> {
-    static auto deserialize_template(const Buffer &s, std::wstring &t, std::size_t &offset) {
-        unsigned int size;
-        memcpy(&size, &s[offset], sizeof(size));
-        offset += sizeof(size);
-        t = std::wstring(reinterpret_cast<wchar_t *>(const_cast<char *>(&s[offset])), size / sizeof(wchar_t));
-        offset += size;
-        return ;
-    }
-};
-
 
 template <class T, class Buffer, bool copy>
 struct serialize_helper<std::vector<T>, Buffer, copy> {
@@ -427,6 +359,22 @@ inline constexpr auto switch_variant_type(T &t, std::size_t index) {
         GENERATE_VARIANT_CONSTRUCT_HELPER(13);
         GENERATE_VARIANT_CONSTRUCT_HELPER(14);
         GENERATE_VARIANT_CONSTRUCT_HELPER(15);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(16);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(17);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(18);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(19);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(20);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(21);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(22);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(23);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(24);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(25);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(26);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(27);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(28);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(29);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(30);
+        GENERATE_VARIANT_CONSTRUCT_HELPER(31);
         default:
             break;
     }

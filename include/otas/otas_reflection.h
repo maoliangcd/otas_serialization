@@ -157,4 +157,55 @@ struct member_name_helper {
     }
 };
 
+template <class T>
+concept map_container = requires(T container) {
+    typename T::key_type;
+    typename T::mapped_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+
+template <class T>
+concept set_container = requires(T container) {
+    typename T::key_type;
+    typename T::value_type;
+    container.size();
+    container.begin();
+    container.end();
+};
+
+template <class T>
+concept vector_container = requires(T container, unsigned int n) {
+    typename T::value_type;
+    container.size();
+    container.begin();
+    container.end();
+    container.resize(n);
+};
+
+template <class T>
+concept char_container = std::is_same_v<T, char> || std::is_same_v<T, signed char>
+    || std::is_same_v<T, unsigned char> || std::is_same_v<T, wchar_t>
+    || std::is_same_v<T, char8_t> || std::is_same_v<T, char16_t>
+    || std::is_same_v<T, char32_t>;
+
+template <class T>
+concept string_container = requires(T container, unsigned int n) {
+    requires char_container<typename T::value_type>;
+    container.size();
+    container.begin();
+    container.end();
+    container.length();
+    container.data();
+    container.resize(n);
+};
+
+template <class T>
+concept normal_container = requires(T container) {
+    typename T::value_type;
+};
+
+
+
 }
