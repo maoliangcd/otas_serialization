@@ -236,7 +236,6 @@ struct deserialize_helper<std::pair<T, U>, Buffer> {
     }
 };
 
-
 template <class T, class Buffer, bool copy>
 struct serialize_helper<std::unique_ptr<T>, Buffer, copy> {
     static auto serialize_template(const std::unique_ptr<T> &t, Buffer &s, std::size_t &offset) {
