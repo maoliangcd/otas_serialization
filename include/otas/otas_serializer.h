@@ -414,10 +414,22 @@ struct otas_buffer {
     char *data_{};
     unsigned int size_{};
 
+    unsigned int size() const {
+        return size_;
+    }
+    unsigned int lenght() const {
+        return size_;
+    }
+    char *begin() const {
+        return data_;
+    }
+    char *end() const {
+        return data_ + size_;
+    }
     char *data() const {
         return data_;
     }
-    void resize(int size) {
+    void resize(unsigned int size) {
         delete[] data_;
         data_ = new char[size];
         size_ = size;
