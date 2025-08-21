@@ -158,12 +158,23 @@ struct member_name_helper {
 };
 
 template <class T>
+concept map_container_emplace = requires(T container) {
+    container.emplace(typename T::key_type{}, typename T::mapped_type{});
+};
+
+template <class T>
 concept map_container = requires(T container) {
     typename T::key_type;
     typename T::mapped_type;
     container.size();
     container.begin();
     container.end();
+    container.insert({typename T::key_type{}, typename T::mapped_type{}});
+};
+
+template <class T>
+concept normal_container_emplace = requires(T container) {
+    container.emplace(typename T::value_type{});
 };
 
 template <class T>
@@ -173,6 +184,7 @@ concept set_container = requires(T container) {
     container.size();
     container.begin();
     container.end();
+    container.insert(typename T::value_type{});
 };
 
 template <class T>
@@ -182,6 +194,16 @@ concept vector_container = requires(T container, unsigned int n) {
     container.begin();
     container.end();
     container.resize(n);
+    { container[n] } -> std::same_as<typename T::value_type &>;
+};
+
+template <class T>
+concept list_container = requires(T container) {
+    typename T::value_type;
+    container.size();
+    container.begin();
+    container.end();
+    container.insert(typename T::value_type{});
 };
 
 template <class T>
@@ -199,6 +221,7 @@ concept string_container = requires(T container, unsigned int n) {
     container.length();
     container.data();
     container.resize(n);
+    { container[n] } -> std::same_as<typename T::value_type &>;
 };
 
 template <class T>

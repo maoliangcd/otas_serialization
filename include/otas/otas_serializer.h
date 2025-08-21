@@ -56,6 +56,15 @@ struct serialize_helper {
             for (const auto &item : t) {
                 serialize_helper<typename T::value_type, Buffer, copy>::serialize_template(item, s, offset);
             }
+        } else if constexpr (list_container<T>) {
+            unsigned int size = t.size();
+            if constexpr (copy) {
+                memcpy(&s[offset], &size, sizeof(size));
+            }
+            offset += sizeof(size);
+            for (const auto &item : t) {
+                serialize_helper<typename T::value_type, Buffer, copy>::serialize_template(item, s, offset);
+            }
         } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
@@ -82,7 +91,11 @@ struct deserialize_helper {
                 deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, fi, offset);
                 typename T::mapped_type se;
                 deserialize_helper<typename T::mapped_type, Buffer>::deserialize_template(s, se, offset);
-                t.emplace(fi, se);
+                if constexpr (map_container_emplace<T>) {
+                    t.emplace(fi, se);
+                } else {
+                    t.insert({fi, se});
+                }
             }
         } else if constexpr (set_container<T>) {
             unsigned int size;
@@ -91,7 +104,11 @@ struct deserialize_helper {
             for (unsigned int index = 0; index < size; index++) { \
                 typename T::key_type item;
                 deserialize_helper<typename T::key_type, Buffer>::deserialize_template(s, item, offset);
-                t.emplace(item);
+                if constexpr (normal_container_emplace<T>) {
+                    t.emplace(item);
+                } else {
+                    t.insert(item);
+                }
             }
         } else if constexpr (string_container<T>) {
             unsigned int size;
@@ -107,6 +124,19 @@ struct deserialize_helper {
             t.resize(size);
             for (auto &item : t) {
                 deserialize_helper<typename T::value_type, Buffer>::deserialize_template(s, item, offset);
+            }
+        } else if constexpr (list_container<T>) {
+            unsigned int size;
+            memcpy(&size, &s[offset], sizeof(size));
+            offset += sizeof(size);
+            for (unsigned int index = 0; index < size; index++) {
+                T item{};
+                deserialize_helper<typename T::value_type, Buffer>::deserialize_template(s, item, offset);
+                if constexpr (normal_container_emplace<T>) {
+                    t.emplace(item);
+                } else {
+                    t.insert(item);
+                }
             }
         } else {
             constexpr auto count = get_member_count<T>();
