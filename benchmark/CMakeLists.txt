@@ -15,3 +15,5 @@ add_executable(test_basic test_basic.cpp)
 add_executable(test_effiency_monster test_effiency_monster.cpp)
 add_executable(test_effiency_person test_effiency_person.cpp)
 add_executable(test_effiency_rect test_effiency_rect.cpp)
+
+add_executable(test_json test_json.cpp)
