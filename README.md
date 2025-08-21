@@ -136,7 +136,7 @@ auto otas2 = deserialize<Otas>(s);
 ## 自定义容器
 本项目支持某些自定义容器，需满足以下约束
 ### map类型
-该类型需提供`value_type`和`mapped_type`类型成员，`size()`，`begin()`，`end()`，`insert()`方法，若同时定义了`emplace()`方法，则会在反序列化时调用`emplace`方法。
+该类型需提供`key_type`和`mapped_type`类型成员，`size()`，`begin()`，`end()`，`insert()`方法，若同时定义了`emplace()`方法，则会在反序列化时调用`emplace`方法。
 ```cpp
 template <class T>
 concept map_container = requires(T container) {
@@ -164,7 +164,7 @@ concept set_container = requires(T container) {
 ```
 
 ### vector类型
-该类型需提供`value_type`类型成员，`size()`，`begin()`，`end()`和`resize()`方法，并重载了`operator[]`方法。
+该类型需提供`value_type`类型成员，`size()`，`begin()`，`end()`和`resize()`方法，并重载了`operator[]`运算符。
 ```cpp
 template <class T>
 concept vector_container = requires(T container, unsigned int n) {
@@ -191,7 +191,7 @@ concept list_container = requires(T container) {
 ```
 
 ### string类型
-该类型需提供`value_type`类型成员，且`value_type`类型为字符类型。提供`begin()`，`end()`，`size()`，`length()`，`data()`和`resize()`方法，并重载了`operator[]`方法。
+该类型需提供`value_type`类型成员，且`value_type`类型为字符类型。提供`begin()`，`end()`，`size()`，`length()`，`data()`和`resize()`方法，且`data()`方法提供的内存连续，并重载了`operator[]`运算符。
 ```cpp
 template <class T>
 concept string_container = requires(T container, unsigned int n) {
@@ -205,9 +205,6 @@ concept string_container = requires(T container, unsigned int n) {
     { container[n] } -> std::same_as<typename T::value_type &>;
 };
 ```
-
-
-
 
 ## 性能测试
 在性能测试中，otas_serialization相比其他序列工具展现出较为明显的性能提升。使用`struct_pack`给出的用例，进行1000000万次序列化，耗时如下:
