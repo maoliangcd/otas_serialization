@@ -85,7 +85,6 @@ auto serialize_json(const T &obj) {
     data[offset++] = '{';
     json_helper<T, type, true>::serialize_template(obj, data, offset);
     data[offset++] = '}';
-
     return buffer;
 };
 
