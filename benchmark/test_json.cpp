@@ -13,7 +13,6 @@ struct Node {
 void TEST_CASE1() {
     Node node{{1, 2, 3, 4}};
     auto s = serialize_json(node);
-    std::cout << s << std::endl;
 }
 
 int main() {
