@@ -6,85 +6,148 @@
 
 namespace otas_serializer {
 
-template <class T, class Buffer, bool copy>
-struct json_helper {
-    ALWAYS_INLINE static auto serialize_template(const T &t, Buffer &s, std::size_t &offset) {
-        if constexpr (vector_container<T>) {
-            if constexpr (copy) {
-                s[offset] = '[';
-            }
-            offset++;
+template <class T>
+concept to_json_type = requires(T container, std::string buffer) {
+    { container.to_json() } -> std::same_as<std::string>;
+    container.from_json(buffer);
+};
+
+template <class T>
+concept to_string_type = requires(T container) {
+    { std::to_string(container) } -> std::same_as<std::string>;
+};
+
+
+template <class T>
+struct json_serialize_helper {
+    ALWAYS_INLINE static auto serialize_template(const T &t, std::string &buffer) {
+        if constexpr (to_json_type<T>) {
+            buffer.append(t.to_json());
+        } else if constexpr (char_container<T>) {
+            buffer.append("\'");
+            buffer.append(1, t);
+            buffer.append("\'");
+        } else if constexpr (string_container<T>) {
+            buffer.append("\"");
+            buffer.append(t.size(), t.data());
+            buffer.append("\"");
+        } else if constexpr (to_string_type<T>) {
+            buffer.append(std::to_string(t));
+        } else if constexpr (map_container<T>) {
             auto it = t.begin();
-            json_helper<typename T::value_type, Buffer, copy>::serialize_template(*it, s, offset);
+            buffer.append("[");
+            if (it != t.end()) {
+                buffer.append("{\"key\":");
+                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
+                buffer.append(",\"value\":");
+                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
+                buffer.append("}");
+                it++;
+            }
+            for (;it != t.end(); it++) {
+                buffer.append(",");
+                buffer.append("{\"key\":");
+                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
+                buffer.append(",\"value\":");
+                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
+                buffer.append("}");
+            }
+            buffer.append("]");
+        }        
+        else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
+            auto it = t.begin();
+            buffer.append("[");
+            json_serialize_helper<typename T::value_type>::serialize_template(*it, buffer);
             it++;
             for (;it != t.end(); it++) {
-                if constexpr (copy) {
-                    s[offset] = ',';
-                }
-                offset++;
-                json_helper<typename T::value_type, Buffer, copy>::serialize_template(*it, s, offset);
+                buffer.append(",");
+                json_serialize_helper<typename T::value_type>::serialize_template(*it, buffer);
             }
-            if constexpr (copy) {
-                s[offset] = ']';
-            }
-            offset++;
+            buffer.append("]");
         } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
             auto names =  member_name_helper<T>::tuple_name();
+            [&]<std::size_t... index>(std::index_sequence<index...>) {
+                ((  
+                    buffer.append(index == 0 ? "\"" : ",\n\""),
+                    buffer.append(std::get<index>(names)), buffer.append("\":"),
+                    json_serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), buffer)
+                ), ...);
+            } (std::make_index_sequence<count>{});
+        }
+        return ;
+    }
+};
 
-            if constexpr (copy) {
-                [&]<std::size_t... index>(std::index_sequence<index...>) {
-                    ((  
-                        s[offset++] = '"',
-                        memcpy(&s[offset], names[index].data(), names[index].length()),
-                        offset += names[index].length(),
-                        s[offset++] = '"',
-                        s[offset++] = ':',
-                        json_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>, Buffer, copy>::serialize_template(std::get<index>(members), s, offset)
-                    ), ...);
-                } (std::make_index_sequence<count>{});
-            } else {
-                [&]<std::size_t... index>(std::index_sequence<index...>) {
-                    ((
-                        offset += names[index].length() + 3,
-                        json_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>, Buffer, copy>::serialize_template(std::get<index>(members), s, offset)
-                    ), ...);
-                } (std::make_index_sequence<count>{});
+template <class T>
+struct json_deserialize_helper {
+    ALWAYS_INLINE static auto serialize_template(const T &t, std::string &buffer) {
+    if constexpr (to_json_type<T>) {
+            t.from_json();
+        } else if constexpr (char_container<T>) {
+            buffer.append("\'");
+            buffer.append(1, t);
+            buffer.append("\'");
+        } else if constexpr (string_container<T>) {
+            buffer.append("\"");
+            buffer.append(t.size(), t.data());
+            buffer.append("\"");
+        } else if constexpr (to_string_type<T>) {
+            buffer.append(std::to_string(t));
+        } else if constexpr (map_container<T>) {
+            auto it = t.begin();
+            buffer.append("[");
+            if (it != t.end()) {
+                buffer.append("{\"key\":");
+                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
+                buffer.append(",\"value\":");
+                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
+                buffer.append("}");
+                it++;
             }
+            for (;it != t.end(); it++) {
+                buffer.append(",");
+                buffer.append("{\"key\":");
+                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
+                buffer.append(",\"value\":");
+                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
+                buffer.append("}");
+            }
+            buffer.append("]");
+        }        
+        else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
+            auto it = t.begin();
+            buffer.append("[");
+            json_serialize_helper<typename T::value_type>::serialize_template(*it, buffer);
+            it++;
+            for (;it != t.end(); it++) {
+                buffer.append(",");
+                json_serialize_helper<typename T::value_type>::serialize_template(*it, buffer);
+            }
+            buffer.append("]");
+        } else {
+            constexpr auto count = get_member_count<T>();
+            auto members = member_tuple_helper<T, count>::tuple_view(t);
+            auto names =  member_name_helper<T>::tuple_name();
+            [&]<std::size_t... index>(std::index_sequence<index...>) {
+                ((  
+                    buffer.append(index == 0 ? "\"" : ",\n\""),
+                    buffer.append(std::get<index>(names)), buffer.append("\":"),
+                    json_serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), buffer)
+                ), ...);
+            } (std::make_index_sequence<count>{});
         }
-        return ;
-    }
 };
 
-template <class Buffer, bool copy>
-struct json_helper<int, Buffer, copy> {
-    ALWAYS_INLINE static auto serialize_template(const int &t, Buffer &s, std::size_t &offset) {
-        auto number = std::to_string(t);
-        if constexpr (copy) {
-            memcpy(&s[offset], number.data(), number.length());
-        }
-        offset += number.length();
-        return ;
-    }
-};
+
 
 template <class Buffer = std::string, class T>
 auto serialize_json(const T &obj) {
     Buffer buffer;
-    using type = decltype(buffer.data());
-    type data = buffer.data();
-    std::size_t size{};
-    size++;
-    json_helper<T, type, false>::serialize_template(obj, data, size);
-    size++;
-    buffer.resize(size);
-    data = buffer.data();
-
-    std::size_t offset{};
-    data[offset++] = '{';
-    json_helper<T, type, true>::serialize_template(obj, data, offset);
-    data[offset++] = '}';
+    buffer.append("{\n");
+    json_serialize_helper<T>::serialize_template(obj, buffer);
+    buffer.append("\n}");
     return buffer;
 };
 
