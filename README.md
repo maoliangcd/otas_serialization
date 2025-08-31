@@ -37,6 +37,33 @@ int main() {
 ```
 没错，你不需要添加任何宏定义，不需要编写配置文件。只需要在代码中调用给定的接口。
 
+本项目支持json的序列化与反序列化：
+```cpp
+#include <iostream>
+#include <string>
+#include "otas/otas_json.h"
+
+struct Node {
+    std::vector<int> a;
+    std::vector<long> b;
+    std::vector<char> c;
+    std::vector<double> d;
+};
+
+int main() {
+    Node node0{{1, 2, 3, 4}, {-1, -2, -3, -4}, {'x', 'y'}, {0.1, 1.1, 32.1}};
+    auto s = serialize_json(node0);
+    auto node1 = deserialize_json<Node>(s);
+    system("pause");
+    return 0;
+}
+```
+
+序列化后的json字符串：
+```json
+{"a":[1,2,3,4],"b":[-1,-2,-3,-4],"c":['x','y'],"d":[0.100000,1.100000,32.100000]}
+```
+
 ### 2.接口
 ```cpp
 template <class Buffer = std::string, class T>
@@ -60,6 +87,28 @@ auto deserialize(const Buffer &buffer)
 
 返回值：
 反序列化获得的对象
+
+```cpp
+template <class T>
+auto serialize_json(const T &obj)
+```
+| 参数 | 类型| 说明 |
+| :--- | :--- | :--- |
+| obj | 入参 | 序列化的对象 |
+
+返回值：
+json字符串，类型为std::string
+
+```cpp
+template <class T> 
+auto deserialize_json(const std::string &buffer)
+```
+| 参数 | 类型| 说明 |
+| :--- | :--- | :--- |
+| buffer | 入参 | json字符串 |
+
+返回值：
+反序列化的结果
 
 ### 3.部署
 将`include`目录下的内容复制到你的项目

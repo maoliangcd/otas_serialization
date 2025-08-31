@@ -8,13 +8,11 @@ namespace otas_serializer {
 
 template <class T>
 concept to_string_type = requires(T container) {
-    { std::to_string(container) } -> std::same_as<std::string>;
+    std::to_string(container);
 };
 
 void search(std::string buffer, size_t &offset, const char c) {
-    while (buffer[offset] != c) {
-        offset++;
-    }
+    while (buffer[offset++] != c);
     return ;
 }
 
@@ -31,28 +29,7 @@ struct json_serialize_helper {
             buffer.append("\"");
         } else if constexpr (to_string_type<T>) {
             buffer.append(std::to_string(t));
-        } else if constexpr (map_container<T>) {
-            auto it = t.begin();
-            buffer.append("[");
-            if (it != t.end()) {
-                buffer.append("{\"key\":");
-                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
-                buffer.append(",\"value\":");
-                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
-                buffer.append("}");
-                it++;
-            }
-            for (;it != t.end(); it++) {
-                buffer.append(",");
-                buffer.append("{\"key\":");
-                json_serialize_helper<typename T::key_type>::serialize_template(it->first, buffer);
-                buffer.append(",\"value\":");
-                json_serialize_helper<typename T::mapped_type>::serialize_template(it->second, buffer);
-                buffer.append("}");
-            }
-            buffer.append("]");
-        }        
-        else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
+        } else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
             auto it = t.begin();
             buffer.append("[");
             json_serialize_helper<typename T::value_type>::serialize_template(*it, buffer);
@@ -68,7 +45,7 @@ struct json_serialize_helper {
             auto names =  member_name_helper<T>::tuple_name();
             [&]<std::size_t... index>(std::index_sequence<index...>) {
                 ((
-                    buffer.append(index == 0 ? "\"" : ",\n\""),
+                    buffer.append(index == 0 ? "\"" : ",\""),
                     buffer.append(names[index]), buffer.append("\":"),
                     json_serialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::serialize_template(std::get<index>(members), buffer)
                 ), ...);
@@ -78,7 +55,6 @@ struct json_serialize_helper {
     }
 };
 
-/*
 template <class T>
 struct json_deserialize_helper {
     ALWAYS_INLINE static auto deserialize_template(const std::string &buffer, T &t, std::size_t &offset) {
@@ -93,9 +69,10 @@ struct json_deserialize_helper {
         } else if constexpr (to_string_type<T>) {
             double pw{0.1};
             bool is_float{false};
+            bool negative{false};
             while (true) {
                 if (buffer[offset] == '-') {
-                    t = -t;
+                    negative = true;
                 } else if (buffer[offset] == '.') {
                     is_float = true;
                 } else if (buffer[offset] >= '0' && buffer[offset] <= '9') {
@@ -111,26 +88,28 @@ struct json_deserialize_helper {
                 }
                 offset++;
             }
-        } else if constexpr (map_container<T>) {
-        }        
-        else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
-            search('[');
-            json_deserialize_helper<typename T::value_type>::deserialize_template(buffer, *it, offset);
-            it++;
-            for (;it != t.end(); it++) {
-                offset++;
-                json_deserialize_helper<typename T::value_type>::deserialize_template(buffer, *it, offset);
+            if (negative) {
+                t = -t;
             }
-            offset++;
+        } else if constexpr (vector_container<T> || set_container<T> || list_container<T>) {
+            search(buffer, offset,'[');
+            while (buffer[offset] != ']') {
+                typename T::value_type obj{};
+                json_deserialize_helper<typename T::value_type>::deserialize_template(buffer, obj, offset);
+                t.push_back(obj);
+                if (buffer[offset] == ']') {
+                    break;
+                }
+                offset++;
+            }
+            search(buffer, offset, ']');
         } else {
             constexpr auto count = get_member_count<T>();
             auto members = member_tuple_helper<T, count>::tuple_view(t);
             auto names =  member_name_helper<T>::tuple_name();
             [&]<std::size_t... index>(std::index_sequence<index...>) {
                 ((  
-                    offset += index == 0 ? 1 : 3, 
-                    offset += names[index].length(),
-                    offset += 2,
+                    search(buffer, offset, ':'),
                     json_deserialize_helper<remove_cvref_t<std::tuple_element_t<index, decltype(members)>>>::deserialize_template(buffer, std::get<index>(members), offset)
                 ), ...);
             } (std::make_index_sequence<count>{});
@@ -138,27 +117,24 @@ struct json_deserialize_helper {
     }
 };
 
-*/
-
 template <class T>
 auto serialize_json(const T &obj) {
     std::string buffer;
-    buffer.append("{\n");
+    buffer.append("{");
     json_serialize_helper<T>::serialize_template(obj, buffer);
-    buffer.append("\n}");
+    buffer.append("}");
     return buffer;
 };
 
-/*
 template <class T> 
 auto deserialize_json(const std::string &buffer) {
     T obj;
     std::size_t offset{};
-    offset += 2;
+    search(buffer, offset, '{');
     json_deserialize_helper<T>::deserialize_template(buffer, obj, offset);
-    offset += 2;
+    search(buffer, offset, '}');
     return obj;
 };
-*/
+
 
 }
