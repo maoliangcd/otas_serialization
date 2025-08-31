@@ -14,9 +14,11 @@ struct Node {
 };
 
 void TEST_CASE1() {
-    Node node{{1, 2, 3, 4}, {-1, -2, -3, -4}, {'x', 'y'}, {{1, 0.1}, {2, 0.2}}};
-    auto s = serialize_json(node);
+    Node node0{{1, 2, 3, 4}, {-1, -2, -3, -4}, {'x', 'y'}, {{1, 0.1}, {2, 0.2}}};
+    auto s = serialize_json(node0);
     std::cout << s << std::endl;
+    // Node node1 = deserialize_json<Node>(s);
+    // assert(node0.a.size() == node1.a.size());
 }
 
 int main() {
