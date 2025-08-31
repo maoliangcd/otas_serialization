@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Generic badge](https://img.shields.io/badge/C++-20-blue.svg)](https://shields.io/)
+[![gcc](https://img.shields.io/badge/gcc-green.svg)](https://gcc.gnu.org/)
 
 [设计文档](https://github.com/maoliangcd/otas_serialization/blob/main/doc/design.md)
 
@@ -37,7 +38,7 @@ int main() {
 ```
 没错，你不需要添加任何宏定义，不需要编写配置文件。只需要在代码中调用给定的接口。
 
-本项目支持json的序列化与反序列化：
+本项目支持json的序列化与反序列化，该功能目前仅支持gcc编译器：
 ```cpp
 #include <iostream>
 #include <string>
