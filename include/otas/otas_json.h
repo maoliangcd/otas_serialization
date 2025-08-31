@@ -20,9 +20,9 @@ template <class T>
 struct json_serialize_helper {
     ALWAYS_INLINE static auto serialize_template(const T &t, std::string &buffer) {
         if constexpr (char_container<T>) {
-            buffer.append("\'");
+            buffer.append("\"");
             buffer.append(1, t);
-            buffer.append("\'");
+            buffer.append("\"");
         } else if constexpr (string_container<T>) {
             buffer.append("\"");
             buffer.append(t.size(), t.data());
