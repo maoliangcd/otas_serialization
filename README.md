@@ -8,6 +8,8 @@
 
 [English readme](https://github.com/maoliangcd/otas_serialization/blob/main/doc/readme_english.md)
 
+[知乎文章](https://zhuanlan.zhihu.com/p/1931120499179647603)
+
 这是一个只包含头文件的序列化库。不需要额外的配置文件和宏定义。
 
 本项目参考自[yalantinglibs](https://github.com/alibaba/yalantinglibs)
